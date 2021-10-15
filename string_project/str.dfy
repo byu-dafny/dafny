@@ -86,7 +86,21 @@ method Main ()
   assert t9 == "a";
 }
 
+/**
+Ideas for testing
+1. fuzz testing (random inputs)
+2. pathological testing
+3. edge case testing (test least likely paths/inputs/etc)
+4. regression changes (where do we expect things to change, what can we test to ensure output is same)
+5. deep testing (test paths/conditions that are hard for engineers to think about when writing)
+6. recursive identification testing (can we test each recursive path only?)
 
+Questions I want to ask
+1. Are we generating tests to validate that our java code (generated from dafny) is correct?
+2. Are we generating tests to perform some coverage tests for the generated java?
+3. What is purpose of middle part.
+
+ */
 
 
   /**

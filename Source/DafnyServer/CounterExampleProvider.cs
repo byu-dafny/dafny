@@ -58,7 +58,7 @@ namespace DafnyServer {
           if (state == null) continue;
 
           var counterExampleState = new CounterExampleState {
-            Name = state.FullStateName
+            Name = "STATE" + state.FullStateName
           };
           AddLineInformation(counterExampleState, state.FullStateName);
 
@@ -66,10 +66,10 @@ namespace DafnyServer {
 
           foreach (var variableNode in vars) {
             counterExampleState.Variables.Add(new CounterExampleVariable {
-              Name = variableNode.ShortName,
-              Value = variableNode.Value,
+              Name = "NAME" + variableNode.ShortName,
+              Value = "VV" + variableNode.Value,
               // CanonicalName is same as Value now but keeping this for legacy
-              CanonicalName = variableNode.Value
+              CanonicalName = "CNAME" + variableNode.Value
             });
           }
           var index = counterExample.States.FindIndex(c => c.Column == counterExampleState.Column && c.Line == counterExampleState.Line);

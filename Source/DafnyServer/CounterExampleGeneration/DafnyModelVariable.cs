@@ -184,7 +184,8 @@ namespace DafnyServer.CounterExampleGeneration {
       get {
         var length = GetLength();
         if (length == null || seqElements.Count != length) {
-          return base.Value;
+          return "[ Count :=" + seqElements.Count + " Length := " + length + " base.Value :=" + base.Value + "]";
+          //return base.Value;
         }
         List<string> result = new();
         for (var i = 0; i < length; i++) {
@@ -195,7 +196,7 @@ namespace DafnyServer.CounterExampleGeneration {
             seqElements[i].Value :
             seqElements[i].ShortName);
         }
-        return "[" + string.Join(", ", result) + "]";
+        return "[SS" + string.Join(", ", result) + "]";
       }
     }
 
