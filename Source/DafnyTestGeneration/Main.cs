@@ -26,7 +26,7 @@ namespace DafnyTestGeneration {
 
       // Generate tests based on counterexamples produced from modifications
       for (var i = modifications.Count - 1; i >= 0; i--) {
-        modifications[i].GetCounterExampleLog();
+        modifications[i].GetCounterExampleLog(i);
         var deadStates = ((BlockBasedModification)modifications[i])
           .GetKnownDeadStates();
         if (deadStates.Count != 0) {
@@ -69,10 +69,24 @@ namespace DafnyTestGeneration {
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
 
       // Create modifications of the program with assertions for each block\path
-      ProgramModifier programModifier =
-        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path
-          ? new PathBasedModifier()
-          : new BlockBasedModifier();
+      ProgramModifier programModifier;
+      switch (DafnyOptions.O.TestGenOptions.Mode) {
+        case TestGenerationOptions.Modes.Path:
+          programModifier = new PathBasedModifier();
+          break;
+        case TestGenerationOptions.Modes.Require:
+          programModifier = new RequireBasedModifier();
+          break;
+        case TestGenerationOptions.Modes.Ensure:
+          throw new NotImplementedException("Ensure is not done yet!");
+        case TestGenerationOptions.Modes.Ensure_Strength:
+          throw new NotImplementedException("Strength is not done yet!");
+        case TestGenerationOptions.Modes.Block:
+        default:
+          // default to the block because why not
+          programModifier = new BlockBasedModifier();
+          break;
+      }
       return programModifier.GetModifications(boogiePrograms);
     }
 
@@ -101,8 +115,9 @@ namespace DafnyTestGeneration {
       // Generate tests based on counterexamples produced from modifications
       var testMethods = new ConcurrentBag<TestMethod>();
       for (var i = modifications.Count - 1; i >= 0; i--) {
-        var log = modifications[i].GetCounterExampleLog();
+        var log = modifications[i].GetCounterExampleLog(i);
         if (log == null) {
+          Console.Error.WriteLine("No counter example log found");
           continue;
         }
         var testMethod = new TestMethod(dafnyInfo, log);

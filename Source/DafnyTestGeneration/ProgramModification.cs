@@ -70,7 +70,7 @@ namespace DafnyTestGeneration {
     /// version of the original boogie program. Return null if this
     /// counterexample does not cover any new SourceModifications.
     /// </summary>
-    public virtual string? GetCounterExampleLog() {
+    public virtual string? GetCounterExampleLog(int index) {
       var oldOptions = DafnyOptions.O;
       var options = SetupOptions(procedure);
       DafnyOptions.Install(options);
@@ -81,6 +81,19 @@ namespace DafnyTestGeneration {
       ExecutionEngine.CollectModSets(program);
       ExecutionEngine.CoalesceBlocks(program);
       ExecutionEngine.Inline(program);
+
+
+      if (oldOptions.TestGenOptions.PrintBoogieFile != null) {
+        Console.Error.WriteLine("WRITING TO FILE");
+        string filename = oldOptions.TestGenOptions.PrintBoogieFile;
+        var tw = filename == "-" ? Console.Out : new StreamWriter(filename.Replace(".", "_modification_" + index + "_preexe."));
+
+        var textRepresentation = (program != null) ?
+        Utils.CaptureConsoleOutput(() => program.Emit(new TokenTextWriter(Console.Out))) : "";
+        tw.Write(textRepresentation);
+        tw.Flush();
+      }
+
       var log = Utils.CaptureConsoleOutput(
         () => ExecutionEngine.InferAndVerify(program,
           new PipelineStatistics(), uniqueId,
@@ -94,10 +107,12 @@ namespace DafnyTestGeneration {
           return log;
         }
       }
+      Console.Error.WriteLine("Counter Example Log:" + log);
       return null;
     }
 
-    public override string ToString() {
+    // just dump a single implementation
+    /*public override string ToString() {
       var original = base.ToString() ?? "";
       var procedureName = procedure ?? "";
       var implementation = program.Implementations.FirstOrDefault(i => i.Name == procedureName);
@@ -106,6 +121,17 @@ namespace DafnyTestGeneration {
           () => implementation.Emit(new TokenTextWriter(Console.Out), 0))
         : "";
       return original + "#" + procedureName + " :\n" + textRepresentation;
+    }*/
+
+    // dump the entire program
+    public override string ToString() {
+      var original = base.ToString() ?? "";
+      var procedureName = procedure ?? "";
+      var textRepresentation = (program != null) ?
+        Utils.CaptureConsoleOutput(
+          () => program.Emit(new TokenTextWriter(Console.Out)))
+        : "";
+      return textRepresentation;
     }
 
   }

@@ -50,6 +50,94 @@ ensures newString == replaceRecursiveFunc(remainingString, pattern, other)
   }
 }
 
+method replaceRecursive2(remainingString:string, pattern:string, other:string) returns (newString:string)
+requires |remainingString| >= 0
+requires |pattern| > 0
+requires |other| >= 0
+// optional - no need to test string length since we know the exact return value
+//ensures |newString| == |remainingString| + countOccurences(remainingString, pattern) * (|other| - |pattern|)
+// required to know about each char in the sequence
+ensures newString == replaceRecursiveFunc(remainingString, pattern, other)
+{
+  // if the remaningString is too small to match (or we are at zero)
+  if (|remainingString| == 0) {
+    return remainingString;
+  }
+  // if the pattern is at the beginning of the string
+  if( pattern <= remainingString) {
+    var prefixedInner:string := replaceRecursive(remainingString[|pattern|..], pattern, other);
+    return other + prefixedInner;
+  } else {
+    var first:string := remainingString[..1];
+    var inner:string := replaceRecursive(remainingString[1..], pattern, other);
+    return first + inner;
+  }
+}
+
+
+
+method replaceIterative(original:string, pattern:string, other:string) returns (newString:string)
+  requires |original| >= 0
+  requires |pattern| > 0
+  requires |other| >= 0
+  // optional - no need to test string length since we know the exact return value
+  //ensures |newString| == |remainingString| + countOccurences(remainingString, pattern) * (|other| - |pattern|)
+  // required to know about each char in the sequence
+  ensures newString == replaceRecursiveFunc(original, pattern, other)
+  {
+    newString := "";
+    var i := 0;
+    while (i < |original|)	
+    {
+      // if its a prefix
+      if( pattern <= original[i..]) {
+        // add the replacement
+        newString := newString + other;
+        // skip to the end of the match
+        i := i + |pattern|;
+      }
+      else {
+        var first:string := original[i..i+1];
+        // add the first char
+        newString := newString + first;
+        // increment our index
+        i	:=	i	+	1;
+      }
+    }
+    return newString;
+  }
+
+method replaceIterative2(original:string, pattern:string, other:string) returns (newString:string)
+  requires |original| >= 0
+  requires |pattern| > 0
+  requires |other| >= 0
+  // optional - no need to test string length since we know the exact return value
+  //ensures |newString| == |remainingString| + countOccurences(remainingString, pattern) * (|other| - |pattern|)
+  // required to know about each char in the sequence
+  ensures newString == replaceRecursiveFunc(original, pattern, other)
+  {
+    newString := "";
+    var original2 := original;
+    while (|original2| > 0)	
+    {
+      // if its a prefix
+      if( pattern <= original2) {
+        // add the replacement
+        newString := newString + other;
+        // skip to the end of the match
+        original2 := original2[|pattern|..];
+      }
+      else {
+        var first:string := original2[..1];
+        // add the first char
+        newString := newString + first;
+        // increment our index
+        original2 := original2[1..];
+      }
+    }
+    return newString;
+  }
+
 /*
   * Test method
   */
@@ -79,11 +167,80 @@ method Main ()
   assert t7 == "abbabb";
 
   // empty original
-  var t8:string := replaceRecursive("", "c", "b");
+  var t8:string := replaceIterative("", "c", "b");
   assert t8 == "";
   // empty other
   var t9:string := replaceRecursive("ca", "c", "");
   assert t9 == "a";
+
+  // single replacement
+  var t1i:string := replaceRecursive("c", "c", "b");
+  assert t1i == "b";
+  // no replacement
+  var t2i:string := replaceRecursive("a", "c", "b");
+  assert t2i == "a";
+  // before replacement
+  var t3i:string := replaceRecursive("ca", "c", "b");
+  assert t3i == "ba";
+  // after replacement
+  var t4i:string := replaceRecursive("ac", "c", "b");
+  assert t4i == "ab";
+
+  // sequential replacement
+  var t5i:string := replaceRecursive("cc", "c", "b");
+  assert t5i == "bb";
+  // non-sequential replacement replacement
+  var t6i:string := replaceRecursive("cac", "c", "b");
+  assert t6i == "bab";
+  // complex non-sequential replacement replacement
+  var t7i:string := replaceRecursive("accacc", "c", "b");
+  assert t7i == "abbabb";
+
+  // empty original
+  var t8i:string := replaceRecursive("", "c", "b");
+  assert t8i == "";
+  // empty other
+  var t9i:string := replaceRecursive("ca", "c", "");
+  assert t9i == "a";
+
+
+  // Expected Tests For Partition Testing
+  //         Requires Partitions
+  // The code will generate any test that is accept or reject.
+  // The code will consider, but not generate any test that is impossible
+  // remainingString.length = -10 (impossible)
+  // remainingString.length = -1 (impossible)
+  // remainingString.length == 0 (accept)
+  // remainingString.length = 1 (accept)
+  // remainingString.length = 10 (accept)
+  // pattern.length = -10 (impossible)
+  // pattern.length = -1 (impossible)
+  // pattern.length == 0 (reject)
+  // pattern.length = 1 (accept)
+  // pattern.length = 10 (accept)
+  // other.length = -10 (impossible)
+  // other.length = -1 (impossible)
+  // other.length == 0 (accept)
+  // other.length = 1 (accept)
+  // other.length = 10 (accept)
+
+  //         Ensures Partitions
+  // The code will generate any test that is accept or reject.
+  // The code will consider, but not generate any test that is impossible
+  // Included in description is a high level comment about why.
+  // ???? is where I understand the oracle is necessary
+  
+  // recursion base case
+  // remainingString.length < pattern.length => ???? + does not call recursion
+  // remainingString.length == 0 => ???? + does not call recursion
+
+  // recursion non-base case (1)
+  // pattern is prefix of remainingString => ???? + calls recursion
+  // pattern is not a prefix of remainingString => ???? + calls recursion
+
+  // deterministic recursion: 
+  // a recursive call has a "smaller" input, where smaller approaches a base cases
+  // remainingString.length = old(remainingString.length) - 1 || pattern.length = old(pattern.length) + 1
 }
 
 /**
