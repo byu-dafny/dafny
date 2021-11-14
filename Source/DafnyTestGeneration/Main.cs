@@ -120,12 +120,25 @@ namespace DafnyTestGeneration {
           Console.Error.WriteLine("No counter example log found");
           continue;
         }
-        var testMethod = new TestMethod(dafnyInfo, log);
-        if (testMethods.Contains(testMethod)) {
-          continue;
+
+        // split the model
+        string[] counterExampleSet = log
+                  .Split("*** END_MODEL") // split counter examples on END_MODEL
+                  .SkipLast(1) // don't keep the last empty one
+                  .Select(x => x += "*** END_MODEL") // re-add the delimiter in becaused used in TestMethod
+                  .ToArray(); // convert to array.
+
+        Console.Error.WriteLine("CounterSet:" + counterExampleSet.Length);
+        foreach (string ce in counterExampleSet) {
+          Console.Error.WriteLine("Found a counter example!");
+          var testMethod = new TestMethod(dafnyInfo, ce);
+          if (testMethods.Contains(testMethod)) {
+            continue;
+          }
+          testMethods.Add(testMethod);
+          yield return testMethod;
         }
-        testMethods.Add(testMethod);
-        yield return testMethod;
+
       }
     }
 

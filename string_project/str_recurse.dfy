@@ -1,5 +1,11 @@
 module M {
-  function replaceRecursiveFunc(remainingString:string, pattern:string, other:string) : string 
+  method foo(a:int, b:int) returns (c:int) 
+  requires a > 10
+  requires b > 5
+  {
+    return b;
+  }
+  /*function replaceRecursiveFunc(remainingString:string, pattern:string, other:string) : string 
   requires |pattern| > 0
   {
     // base case if string is less than the pattern or 0 size
@@ -22,6 +28,8 @@ module M {
   // required to know about each char in the sequence
   ensures newString == replaceRecursiveFunc(remainingString, pattern, other)
   {
+    //assert (|remainingString| >= 0) == false;
+    //assert false;
     // if the remaningString is too small to match (or we are at zero)
     if (|remainingString| < |pattern| || |remainingString| == 0) {
       return remainingString;
@@ -35,5 +43,31 @@ module M {
       var inner:string := replaceRecursive(remainingString[1..], pattern, other);
       return first + inner;
     }
+  }*/
+}
+/*
+class Baz {
+  method foo(a:int, b:int) returns (c:int) 
+      requires a >= 5
+      requires b >= 0
+      ensures c == bar(a, b)
+
+  function bar(a:int, b:int):int 
+      requires a >= 5
+      requires b >= 0
+      decreases a
+  {
+      if a > 5 then           // PIVOTAL CONDITION
+          1 + bar(a - 1, b)  // non-base case
+      else     
+          0                  // base case
   }
 }
+
+type MockBaz = Baz
+
+
+method Main() {
+  var b:Baz := new MockBaz>;
+}
+*/

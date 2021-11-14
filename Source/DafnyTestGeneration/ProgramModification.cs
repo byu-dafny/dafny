@@ -82,7 +82,7 @@ namespace DafnyTestGeneration {
       ExecutionEngine.CoalesceBlocks(program);
       ExecutionEngine.Inline(program);
 
-
+      // write the "pre-infer boogie" to a file
       if (oldOptions.TestGenOptions.PrintBoogieFile != null) {
         Console.Error.WriteLine("WRITING TO FILE");
         string filename = oldOptions.TestGenOptions.PrintBoogieFile;
@@ -99,15 +99,30 @@ namespace DafnyTestGeneration {
           new PipelineStatistics(), uniqueId,
           _ => { }, uniqueId));
       DafnyOptions.Install(oldOptions);
+
+      if (oldOptions.TestGenOptions.PrintBoogieFile != null) {
+        Console.Error.WriteLine("WRITING VERIFICATION RESULTS TO FILE");
+        string filename = oldOptions.TestGenOptions.PrintBoogieFile;
+        var tw = filename == "-" ? Console.Out : new StreamWriter(filename.Replace(".", "_modification_" + index + "_preexe_RES."));
+
+        tw.Write(log);
+        tw.Flush();
+      }
+
+
       // make sure that there is a counterexample (i.e. no parse errors, etc):
       string? line;
       var stringReader = new StringReader(log);
       while ((line = stringReader.ReadLine()) != null) {
-        if (line.StartsWith("Block |")) {
+        if (line.StartsWith("Block |") || line.StartsWith("Impl |")) {
           return log;
         }
       }
-      Console.Error.WriteLine("Counter Example Log:" + log);
+
+
+
+
+      //Console.Error.WriteLine("Counter Example Log:" + log);
       return null;
     }
 

@@ -1,3 +1,6 @@
+echo "0) Clearing old work"
+#rm -rf /workspaces/dafny/string_project/str_recurse_test-java/*
+
 echo "1) Dafny Compile to Java"
 /workspaces/dafny/Scripts/dafny /compileTarget:java /workspaces/dafny/string_project/str_recurse_test.dfy
 
