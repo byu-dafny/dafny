@@ -1,13 +1,12 @@
 include "/workspaces/dafny/string_project/str_recurse.dfy"
 module str_recurseUnitTests {
 import M
-method test0() returns (r0:int)  {
-r0 := M.foo(11, 6);
+method test0() returns (r0:string)  {
+assume false;
+r0 := M.replaceRecursive(['a'], ['a'], ['a']);
 }
-method test1() returns (r0:int)  {
-r0 := M.foo(11, 5);
-}
-method test3() returns (r0:int)  {
-r0 := M.foo(10, 6);
+method test2() returns (r0:string)  {
+assume false;
+r0 := M.replaceRecursive(['a'], [], ['a']);
 }
 }

@@ -1,11 +1,16 @@
 module M {
-  method foo(a:int, b:int) returns (c:int) 
+  /*method foo(a:int, b:int) returns (c:int) 
   requires a > 10
   requires b > 5
+  ensures c == a * b
   {
-    return b;
-  }
-  /*function replaceRecursiveFunc(remainingString:string, pattern:string, other:string) : string 
+    return b * a;
+  }*/
+
+
+
+  
+  function replaceRecursiveFunc(remainingString:string, pattern:string, other:string) : string 
   requires |pattern| > 0
   {
     // base case if string is less than the pattern or 0 size
@@ -43,7 +48,7 @@ module M {
       var inner:string := replaceRecursive(remainingString[1..], pattern, other);
       return first + inner;
     }
-  }*/
+  }
 }
 /*
 class Baz {

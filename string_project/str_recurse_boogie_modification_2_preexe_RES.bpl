@@ -1,8 +1,8 @@
 <no file>(1821,4): Error: This assertion might not hold.
 Execution trace:
-    (1979,3): anon0
+    (1981,3): anon0
 Augmented execution trace:
-Impl | Impl$$M.__default.replaceRecursive | T@U!val!73 | T@U!val!74 | T@U!val!75
+Impl | Impl$$M.__default.replaceRecursive | T@U!val!74 | T@U!val!75 | T@U!val!73
 Types | Seq Box | Seq Box | Seq Box
 
 *** MODEL
@@ -50,17 +50,17 @@ newString#0 -> T@U!val!76
 null -> T@U!val!66
 other##1_0 -> 
 other##2_0 -> 
-other#0@@5 -> T@U!val!75
+other#0@@5 -> T@U!val!73
 pattern##1_0 -> 
 pattern##2_0 -> 
-pattern#0@@5 -> T@U!val!74
+pattern#0@@5 -> T@U!val!75
 prefixedInner#1_0 -> T@U!val!77
 realType -> T@T!val!1
 refType -> T@T!val!16
 regexType -> T@T!val!5
 remainingString##1_0 -> 
 remainingString##2_0 -> 
-remainingString#0@@5 -> T@U!val!73
+remainingString#0@@5 -> T@U!val!74
 rmodeType -> T@T!val!3
 stringType -> T@T!val!4
 TagBool -> T@U!val!5
@@ -311,10 +311,10 @@ char#ToInt -> {
   else -> 0
 }
 ControlFlow -> {
-  0 0 -> 141029
-  0 141029 -> 45995
-  0 45995 -> (- 141319)
-  else -> 141029
+  0 0 -> 106893
+  0 106893 -> 94849
+  0 94849 -> (- 107183)
+  else -> 106893
 }
 Ctor -> {
   T@T!val!0 -> 0
@@ -1252,14 +1252,14 @@ UOrdering3 -> {
   newString#0 -> T@U!val!76
   other##1_0 -> 
   other##2_0 -> 
-  other#0 -> T@U!val!75
+  other#0 -> T@U!val!73
   pattern##1_0 -> 
   pattern##2_0 -> 
-  pattern#0 -> T@U!val!74
+  pattern#0 -> T@U!val!75
   prefixedInner#1_0 -> T@U!val!77
   remainingString##1_0 -> 
   remainingString##2_0 -> 
-  remainingString#0 -> T@U!val!73
+  remainingString#0 -> T@U!val!74
 *** END_STATE
 *** STATE /workspaces/dafny/string_project/str_recurse.dfy(35,2): initial state
   $_Frame -> T@U!val!83

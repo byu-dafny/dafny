@@ -24,4 +24,5 @@ javac -cp /workspaces/dafny/Source/DafnyRuntime/DafnyRuntimeJava/build/libs/Dafn
 echo "4) Running Java"
 # couldn't get it to work without the cd. Is something wrong with the class path then?
 cd /workspaces/dafny/string_project/str_recurse_test-java
-java -cp /workspaces/dafny/Source/DafnyRuntime/DafnyRuntimeJava/build/libs/DafnyRuntime.jar:/workspaces/dafny/string_project/str_recurse_test-java str__recurseUnitTests_Compile/__default
+# bad: swallow errors, since we have to inject assume false, so redirect them to dev null
+java -cp /workspaces/dafny/Source/DafnyRuntime/DafnyRuntimeJava/build/libs/DafnyRuntime.jar:/workspaces/dafny/string_project/str_recurse_test-java str__recurseUnitTests_Compile/__default 2> /dev/null

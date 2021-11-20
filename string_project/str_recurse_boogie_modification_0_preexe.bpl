@@ -1351,6 +1351,134 @@ axiom (forall #$R: Ty, f#0: HandleType :: { $Is(f#0, Tclass._System.___hTotalFun
 
 axiom (forall #$R: Ty, f#0: HandleType, $h: Heap :: { $IsAlloc(f#0, Tclass._System.___hTotalFunc0(#$R), $h) } $IsAlloc(f#0, Tclass._System.___hTotalFunc0(#$R), $h) <==> $IsAlloc(f#0, Tclass._System.___hPartialFunc0(#$R), $h));
 
+function Tclass._System.___hFunc3(Ty, Ty, Ty, Ty) : Ty;
+
+const unique Tagclass._System.___hFunc3: TyTag;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R) } Tag(Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) == Tagclass._System.___hFunc3 && TagFamily(Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) == tytagFamily$_#Func3);
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hFunc3_0(Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) == #$T0);
+
+function Tclass._System.___hFunc3_0(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hFunc3_1(Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) == #$T1);
+
+function Tclass._System.___hFunc3_1(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hFunc3_2(Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) == #$T2);
+
+function Tclass._System.___hFunc3_2(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hFunc3_3(Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) == #$R);
+
+function Tclass._System.___hFunc3_3(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, bx: Box :: { $IsBox(bx, Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) } $IsBox(bx, Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) ==> $Box($Unbox(bx): HandleType) == bx && $Is($Unbox(bx): HandleType, Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)));
+
+function Handle3([Heap,Box,Box,Box]Box, [Heap,Box,Box,Box]bool, [Heap,Box,Box,Box]Set Box) : HandleType;
+
+function Apply3(Ty, Ty, Ty, Ty, Heap, HandleType, Box, Box, Box) : Box;
+
+function Requires3(Ty, Ty, Ty, Ty, Heap, HandleType, Box, Box, Box) : bool;
+
+function Reads3(Ty, Ty, Ty, Ty, Heap, HandleType, Box, Box, Box) : Set Box;
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]Box, r: [Heap,Box,Box,Box]bool, rd: [Heap,Box,Box,Box]Set Box, bx0: Box, bx1: Box, bx2: Box :: { Apply3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2) } Apply3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2) == h[heap, bx0, bx1, bx2]);
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]Box, r: [Heap,Box,Box,Box]bool, rd: [Heap,Box,Box,Box]Set Box, bx0: Box, bx1: Box, bx2: Box :: { Requires3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2) } r[heap, bx0, bx1, bx2] ==> Requires3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]Box, r: [Heap,Box,Box,Box]bool, rd: [Heap,Box,Box,Box]Set Box, bx0: Box, bx1: Box, bx2: Box, bx: Box :: { Reads3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2)[bx] } Reads3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2)[bx] <==> rd[heap, bx0, bx1, bx2][bx]);
+
+function {:inline} Requires3#canCall(t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box) : bool
+{
+  true
+}
+
+function {:inline} Reads3#canCall(t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box) : bool
+{
+  true
+}
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) <==> Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) <==> Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Apply3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Apply3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Apply3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Apply3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Apply3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Apply3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), $IsGoodHeap(heap) } { Reads3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) ==> (Set#Equal(Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), Set#Empty(): Set Box) <==> Set#Equal(Reads3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2), Set#Empty(): Set Box)));
+
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { Requires3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), $IsGoodHeap(heap) } { Requires3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && Set#Equal(Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), Set#Empty(): Set Box) ==> (Requires3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2) <==> Requires3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2)));
+
+axiom (forall f: HandleType, t0: Ty, t1: Ty, t2: Ty, t3: Ty :: { $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) } $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) <==> (forall h: Heap, bx0: Box, bx1: Box, bx2: Box :: { Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) } $IsGoodHeap(h) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && Requires3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) ==> $IsBox(Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2), t3)));
+
+axiom (forall f: HandleType, t0: Ty, t1: Ty, t2: Ty, t3: Ty, u0: Ty, u1: Ty, u2: Ty, u3: Ty :: { $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)), $Is(f, Tclass._System.___hFunc3(u0, u1, u2, u3)) } $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall bx: Box :: { $IsBox(bx, u0) } { $IsBox(bx, t0) } $IsBox(bx, u0) ==> $IsBox(bx, t0)) && (forall bx: Box :: { $IsBox(bx, u1) } { $IsBox(bx, t1) } $IsBox(bx, u1) ==> $IsBox(bx, t1)) && (forall bx: Box :: { $IsBox(bx, u2) } { $IsBox(bx, t2) } $IsBox(bx, u2) ==> $IsBox(bx, t2)) && (forall bx: Box :: { $IsBox(bx, t3) } { $IsBox(bx, u3) } $IsBox(bx, t3) ==> $IsBox(bx, u3)) ==> $Is(f, Tclass._System.___hFunc3(u0, u1, u2, u3)));
+
+axiom (forall f: HandleType, t0: Ty, t1: Ty, t2: Ty, t3: Ty, h: Heap :: { $IsAlloc(f, Tclass._System.___hFunc3(t0, t1, t2, t3), h) } $IsGoodHeap(h) ==> ($IsAlloc(f, Tclass._System.___hFunc3(t0, t1, t2, t3), h) <==> (forall bx0: Box, bx1: Box, bx2: Box :: { Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) } { Reads3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) } $IsBox(bx0, t0) && $IsAllocBox(bx0, t0, h) && $IsBox(bx1, t1) && $IsAllocBox(bx1, t1, h) && $IsBox(bx2, t2) && $IsAllocBox(bx2, t2, h) && Requires3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) ==> (forall r: ref :: { Reads3(t0, t1, t2, t3, h, f, bx0, bx1, bx2)[$Box(r)] } r != null && Reads3(t0, t1, t2, t3, h, f, bx0, bx1, bx2)[$Box(r)] ==> read(h, r, alloc)))));
+
+axiom (forall f: HandleType, t0: Ty, t1: Ty, t2: Ty, t3: Ty, h: Heap :: { $IsAlloc(f, Tclass._System.___hFunc3(t0, t1, t2, t3), h) } $IsGoodHeap(h) && $IsAlloc(f, Tclass._System.___hFunc3(t0, t1, t2, t3), h) ==> (forall bx0: Box, bx1: Box, bx2: Box :: { Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) } $IsAllocBox(bx0, t0, h) && $IsAllocBox(bx1, t1, h) && $IsAllocBox(bx2, t2, h) && Requires3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) ==> $IsAllocBox(Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2), t3, h)));
+
+function Tclass._System.___hPartialFunc3(Ty, Ty, Ty, Ty) : Ty;
+
+const unique Tagclass._System.___hPartialFunc3: TyTag;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R) } Tag(Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) == Tagclass._System.___hPartialFunc3 && TagFamily(Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) == tytagFamily$_#PartialFunc3);
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hPartialFunc3_0(Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) == #$T0);
+
+function Tclass._System.___hPartialFunc3_0(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hPartialFunc3_1(Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) == #$T1);
+
+function Tclass._System.___hPartialFunc3_1(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hPartialFunc3_2(Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) == #$T2);
+
+function Tclass._System.___hPartialFunc3_2(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hPartialFunc3_3(Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) == #$R);
+
+function Tclass._System.___hPartialFunc3_3(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, bx: Box :: { $IsBox(bx, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) } $IsBox(bx, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) ==> $Box($Unbox(bx): HandleType) == bx && $Is($Unbox(bx): HandleType, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)));
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, f#0: HandleType :: { $Is(f#0, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) } $Is(f#0, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) <==> $Is(f#0, Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R)) && (forall x0#0: Box, x1#0: Box, x2#0: Box :: $IsBox(x0#0, #$T0) && $IsBox(x1#0, #$T1) && $IsBox(x2#0, #$T2) ==> Set#Equal(Reads3(#$T0, #$T1, #$T2, #$R, $OneHeap, f#0, x0#0, x1#0, x2#0), Set#Empty(): Set Box)));
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, f#0: HandleType, $h: Heap :: { $IsAlloc(f#0, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R), $h) } $IsAlloc(f#0, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R), $h) <==> $IsAlloc(f#0, Tclass._System.___hFunc3(#$T0, #$T1, #$T2, #$R), $h));
+
+function Tclass._System.___hTotalFunc3(Ty, Ty, Ty, Ty) : Ty;
+
+const unique Tagclass._System.___hTotalFunc3: TyTag;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R) } Tag(Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) == Tagclass._System.___hTotalFunc3 && TagFamily(Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) == tytagFamily$_#TotalFunc3);
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hTotalFunc3_0(Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) == #$T0);
+
+function Tclass._System.___hTotalFunc3_0(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hTotalFunc3_1(Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) == #$T1);
+
+function Tclass._System.___hTotalFunc3_1(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hTotalFunc3_2(Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) == #$T2);
+
+function Tclass._System.___hTotalFunc3_2(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty :: { Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R) } Tclass._System.___hTotalFunc3_3(Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) == #$R);
+
+function Tclass._System.___hTotalFunc3_3(Ty) : Ty;
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, bx: Box :: { $IsBox(bx, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) } $IsBox(bx, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) ==> $Box($Unbox(bx): HandleType) == bx && $Is($Unbox(bx): HandleType, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)));
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, f#0: HandleType :: { $Is(f#0, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) } $Is(f#0, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R)) <==> $Is(f#0, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R)) && (forall x0#0: Box, x1#0: Box, x2#0: Box :: $IsBox(x0#0, #$T0) && $IsBox(x1#0, #$T1) && $IsBox(x2#0, #$T2) ==> Requires3(#$T0, #$T1, #$T2, #$R, $OneHeap, f#0, x0#0, x1#0, x2#0)));
+
+axiom (forall #$T0: Ty, #$T1: Ty, #$T2: Ty, #$R: Ty, f#0: HandleType, $h: Heap :: { $IsAlloc(f#0, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R), $h) } $IsAlloc(f#0, Tclass._System.___hTotalFunc3(#$T0, #$T1, #$T2, #$R), $h) <==> $IsAlloc(f#0, Tclass._System.___hPartialFunc3(#$T0, #$T1, #$T2, #$R), $h));
+
 const unique ##_System._tuple#2._#Make2: DtCtorId;
 
 axiom (forall a#0#0#0: Box, a#0#1#0: Box :: { #_System._tuple#2._#Make2(a#0#0#0, a#0#1#0) } DatatypeCtorId(#_System._tuple#2._#Make2(a#0#0#0, a#0#1#0)) == ##_System._tuple#2._#Make2);
@@ -1461,55 +1589,335 @@ axiom (forall $o: ref :: { $Is($o, Tclass.M.__default()) } $Is($o, Tclass.M.__de
 
 axiom (forall $o: ref, $h: Heap :: { $IsAlloc($o, Tclass.M.__default(), $h) } $IsAlloc($o, Tclass.M.__default(), $h) <==> $o == null || read($h, $o, alloc));
 
-procedure CheckWellformed$$M.__default.foo(a#0: int, b#0: int) returns (c#0: int);
-  free requires 0 == $FunctionContextHeight;
+function M.__default.replaceRecursiveFunc($ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box) : Seq Box;
+
+function M.__default.replaceRecursiveFunc#canCall(remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box) : bool;
+
+axiom (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc($LS($ly), remainingString#0, pattern#0, other#0) } M.__default.replaceRecursiveFunc($LS($ly), remainingString#0, pattern#0, other#0) == M.__default.replaceRecursiveFunc($ly, remainingString#0, pattern#0, other#0));
+
+axiom (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc(AsFuelBottom($ly), remainingString#0, pattern#0, other#0) } M.__default.replaceRecursiveFunc($ly, remainingString#0, pattern#0, other#0) == M.__default.replaceRecursiveFunc($LZ, remainingString#0, pattern#0, other#0));
+
+axiom 1 <= $FunctionContextHeight ==> (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc($ly, remainingString#0, pattern#0, other#0) } M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0) || (1 != $FunctionContextHeight && $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) && Seq#Length(pattern#0) > 0) ==> $Is(M.__default.replaceRecursiveFunc($ly, remainingString#0, pattern#0, other#0), TSeq(TChar)));
+
+function M.__default.replaceRecursiveFunc#requires(LayerType, Seq Box, Seq Box, Seq Box) : bool;
+
+axiom (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc#requires($ly, remainingString#0, pattern#0, other#0) } $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) ==> (M.__default.replaceRecursiveFunc#requires($ly, remainingString#0, pattern#0, other#0) <==> Seq#Length(pattern#0) > 0));
+
+axiom 1 <= $FunctionContextHeight ==> (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc($LS($ly), remainingString#0, pattern#0, other#0) } M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0) || (1 != $FunctionContextHeight && $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) && Seq#Length(pattern#0) > 0) ==> (!(Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0)) ==> (Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)) ==> M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0)) && (!(Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0))) ==> M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0))) && M.__default.replaceRecursiveFunc($LS($ly), remainingString#0, pattern#0, other#0) == (if Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0) then remainingString#0 else (if Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)) then Seq#Append(other#0, M.__default.replaceRecursiveFunc($ly, Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0)) else Seq#Append(Seq#Take(remainingString#0, LitInt(1)), M.__default.replaceRecursiveFunc($ly, Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0)))));
+
+axiom 1 <= $FunctionContextHeight ==> (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: {:weight 3} { M.__default.replaceRecursiveFunc($LS($ly), Lit(remainingString#0), Lit(pattern#0), Lit(other#0)) } M.__default.replaceRecursiveFunc#canCall(Lit(remainingString#0), Lit(pattern#0), Lit(other#0)) || (1 != $FunctionContextHeight && $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) && Seq#Length(Lit(pattern#0)) > 0) ==> (!(Seq#Length(Lit(remainingString#0)) < Seq#Length(Lit(pattern#0)) || Seq#Length(Lit(remainingString#0)) == LitInt(0)) ==> (Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)) ==> M.__default.replaceRecursiveFunc#canCall(Seq#Drop(Lit(remainingString#0), Seq#Length(Lit(pattern#0))), Lit(pattern#0), Lit(other#0))) && (!(Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0))) ==> M.__default.replaceRecursiveFunc#canCall(Lit(Seq#Drop(Lit(remainingString#0), LitInt(1))), Lit(pattern#0), Lit(other#0)))) && M.__default.replaceRecursiveFunc($LS($ly), Lit(remainingString#0), Lit(pattern#0), Lit(other#0)) == (if Seq#Length(Lit(remainingString#0)) < Seq#Length(Lit(pattern#0)) || Seq#Length(Lit(remainingString#0)) == LitInt(0) then remainingString#0 else (if Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)) then Seq#Append(other#0, M.__default.replaceRecursiveFunc($LS($ly), Seq#Drop(Lit(remainingString#0), Seq#Length(Lit(pattern#0))), Lit(pattern#0), Lit(other#0))) else Seq#Append(Seq#Take(Lit(remainingString#0), LitInt(1)), M.__default.replaceRecursiveFunc($LS($ly), Lit(Seq#Drop(Lit(remainingString#0), LitInt(1))), Lit(pattern#0), Lit(other#0))))));
+
+procedure CheckWellformed$$M.__default.replaceRecursiveFunc(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)), other#0: Seq Box where $Is(other#0, TSeq(TChar)));
+  free requires 1 == $FunctionContextHeight;
   modifies $Heap, $Tick;
 
 
 
-procedure Call$$M.__default.foo(a#0: int, b#0: int) returns (c#0: int);
-  requires b#0 > 5;
-  modifies $Heap, $Tick;
-  free ensures (forall $o: ref :: { $Heap[$o] } $o != null && read(old($Heap), $o, alloc) ==> $Heap[$o] == old($Heap)[$o]);
-  free ensures $HeapSucc(old($Heap), $Heap);
-
-
-
-procedure Impl$$M.__default.foo(a#0: int, b#0: int) returns (defass#c#0: bool, c#0: int, $_reverifyPost: bool);
-  free requires 0 == $FunctionContextHeight;
-  requires b#0 > 5;
-  modifies $Heap, $Tick;
-  free ensures (forall $o: ref :: { $Heap[$o] } $o != null && read(old($Heap), $o, alloc) ==> $Heap[$o] == old($Heap)[$o]);
-  free ensures $HeapSucc(old($Heap), $Heap);
-
-
-
-implementation Impl$$M.__default.foo(a#0: int, b#0: int) returns (defass#c#0: bool, c#0: int, $_reverifyPost: bool)
+implementation CheckWellformed$$M.__default.replaceRecursiveFunc(remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box)
 {
   var $_Frame: <beta>[ref,Field beta]bool;
+  var ##remainingString#0: Seq Box;
+  var ##pattern#0: Seq Box;
+  var ##other#0: Seq Box;
+  var ##remainingString#1: Seq Box;
+  var ##pattern#1: Seq Box;
+  var ##other#1: Seq Box;
+  var b$reqreads#0: bool;
+  var b$reqreads#1: bool;
 
   anon0:
-    assume {:print "Impl", " | ", "Impl$$M.__default.foo", " | ", a#0, " | ", b#0} true;
-    assume {:print "Types", " | ", "int", " | ", "int"} true;
+    assume {:print "Impl", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", remainingString#0, " | ", pattern#0, " | ", other#0} true;
+    assume {:print "Types", " | ", "Seq Box", " | ", "Seq Box", " | ", "Seq Box"} true;
+    b$reqreads#0 := true;
+    b$reqreads#1 := true;
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20032"} true;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(13,11): initial state"} true;
     $_Frame := (lambda<alpha> $o: ref, $f: Field alpha :: $o != null && read($Heap, $o, alloc) ==> false);
-    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(5,2): initial state"} true;
-    $_reverifyPost := false;
-    assume {:print} true;
-    assert a#0 > 10 <==> Lit(false);
-    assume {:print} true;
-    assert false;
-    assume true;
-    assume true;
-    c#0 := b#0;
-    defass#c#0 := true;
-    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(7,12)"} true;
-    assert defass#c#0;
-    assume {:print "Block", " | ", "Impl$$M.__default.foo", " | ", "17071"} true;
-    return;
+    assume Seq#Length(pattern#0) > 0;
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20034"} true;
+    goto anon1;
 
   anon1:
-    assert defass#c#0;
-    assume {:print "Block", " | ", "Impl$$M.__default.foo", " | ", "17073"} true;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(13,11): initial state"} true;
+    $_Frame := (lambda<alpha> $o: ref, $f: Field alpha :: $o != null && read($Heap, $o, alloc) ==> false);
+    assume Seq#Length(pattern#0) > 0;
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20034"} true;
+    goto anon11_Then, anon11_Else;
+
+  anon11_Then:
+    assume $Is(M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0), TSeq(TChar));
+    assume false;
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20036"} true;
+    return;
+
+  anon11_Else:
+    $_Frame := (lambda<alpha> $o: ref, $f: Field alpha :: $o != null && read($Heap, $o, alloc) ==> false);
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20043"} true;
+    goto anon12_Then, anon12_Else;
+
+  anon12_Then:
+    assume {:partition} Seq#Length(pattern#0) <= Seq#Length(remainingString#0);
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20045"} true;
+    goto anon5;
+
+  anon12_Else:
+    assume {:partition} Seq#Length(remainingString#0) < Seq#Length(pattern#0);
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20047"} true;
+    goto anon5;
+
+  anon5:
+    goto anon13_Then, anon13_Else;
+
+  anon13_Then:
+    assume {:partition} Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0);
+    assume M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0) == remainingString#0;
+    assume true;
+    assume $Is(M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0), TSeq(TChar));
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20056"} true;
+    goto anon10;
+
+  anon13_Else:
+    assume {:partition} !(Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0));
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20063"} true;
+    goto anon14_Then, anon14_Else;
+
+  anon14_Then:
+    assume {:partition} Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0));
+    assert 0 <= Seq#Length(pattern#0) && Seq#Length(pattern#0) <= Seq#Length(remainingString#0);
+    ##remainingString#0 := Seq#Drop(remainingString#0, Seq#Length(pattern#0));
+    assume $IsAlloc(##remainingString#0, TSeq(TChar), $Heap);
+    ##pattern#0 := pattern#0;
+    assume $IsAlloc(##pattern#0, TSeq(TChar), $Heap);
+    ##other#0 := other#0;
+    assume $IsAlloc(##other#0, TSeq(TChar), $Heap);
+    assert {:subsumption 0} Seq#Length(##pattern#0) > 0;
+    assume Seq#Length(##pattern#0) > 0;
+    b$reqreads#0 := (forall<alpha> $o: ref, $f: Field alpha :: false ==> $_Frame[$o, $f]);
+    assert Seq#Rank(##remainingString#0) < Seq#Rank(remainingString#0) || (Seq#Rank(##remainingString#0) == Seq#Rank(remainingString#0) && (Seq#Rank(##pattern#0) < Seq#Rank(pattern#0) || (Seq#Rank(##pattern#0) == Seq#Rank(pattern#0) && Seq#Rank(##other#0) < Seq#Rank(other#0))));
+    assume M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0);
+    assume M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0) == Seq#Append(other#0, M.__default.replaceRecursiveFunc($LS($LZ), Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0));
+    assume M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0);
+    assume $Is(M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0), TSeq(TChar));
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20065"} true;
+    goto anon10;
+
+  anon14_Else:
+    assume {:partition} !(Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)));
+    assert 0 <= LitInt(1) && LitInt(1) <= Seq#Length(remainingString#0);
+    assert 0 <= LitInt(1) && LitInt(1) <= Seq#Length(remainingString#0);
+    ##remainingString#1 := Seq#Drop(remainingString#0, LitInt(1));
+    assume $IsAlloc(##remainingString#1, TSeq(TChar), $Heap);
+    ##pattern#1 := pattern#0;
+    assume $IsAlloc(##pattern#1, TSeq(TChar), $Heap);
+    ##other#1 := other#0;
+    assume $IsAlloc(##other#1, TSeq(TChar), $Heap);
+    assert {:subsumption 0} Seq#Length(##pattern#1) > 0;
+    assume Seq#Length(##pattern#1) > 0;
+    b$reqreads#1 := (forall<alpha> $o: ref, $f: Field alpha :: false ==> $_Frame[$o, $f]);
+    assert Seq#Rank(##remainingString#1) < Seq#Rank(remainingString#0) || (Seq#Rank(##remainingString#1) == Seq#Rank(remainingString#0) && (Seq#Rank(##pattern#1) < Seq#Rank(pattern#0) || (Seq#Rank(##pattern#1) == Seq#Rank(pattern#0) && Seq#Rank(##other#1) < Seq#Rank(other#0))));
+    assume M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0);
+    assume M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0) == Seq#Append(Seq#Take(remainingString#0, LitInt(1)), M.__default.replaceRecursiveFunc($LS($LZ), Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0));
+    assume M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0);
+    assume $Is(M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0), TSeq(TChar));
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20067"} true;
+    goto anon10;
+
+  anon10:
+    assert b$reqreads#0;
+    assert b$reqreads#1;
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20069"} true;
+    return;
+}
+
+
+
+procedure CheckWellformed$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (newString#0: Seq Box where $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap));
+  free requires 2 == $FunctionContextHeight;
+  modifies $Heap, $Tick;
+
+
+
+implementation CheckWellformed$$M.__default.replaceRecursive(remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box) returns (newString#0: Seq Box)
+{
+  var $_Frame: <beta>[ref,Field beta]bool;
+  var ##remainingString#0: Seq Box;
+  var ##pattern#0: Seq Box;
+  var ##other#0: Seq Box;
+
+  anon0:
+    assume {:print "Impl", " | ", "CheckWellformed$$M.__default.replaceRecursive", " | ", remainingString#0, " | ", pattern#0, " | ", other#0} true;
+    assume {:print "Types", " | ", "Seq Box", " | ", "Seq Box", " | ", "Seq Box"} true;
+    $_Frame := (lambda<alpha> $o: ref, $f: Field alpha :: $o != null && read($Heap, $o, alloc) ==> false);
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(27,9): initial state"} true;
+    assume Seq#Length(remainingString#0) >= LitInt(0);
+    assume Seq#Length(pattern#0) > 0;
+    assume Seq#Length(other#0) >= LitInt(0);
+    havoc $Heap /* where $IsGoodHeap($Heap) && $IsHeapAnchor($Heap) */;
+    assume (forall $o: ref :: { $Heap[$o] } $o != null && read(old($Heap), $o, alloc) ==> $Heap[$o] == old($Heap)[$o]);
+    assume $HeapSucc(old($Heap), $Heap);
+    havoc newString#0;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(34,20): post-state"} true;
+    ##remainingString#0 := remainingString#0;
+    assume $IsAlloc(##remainingString#0, TSeq(TChar), $Heap);
+    ##pattern#0 := pattern#0;
+    assume $IsAlloc(##pattern#0, TSeq(TChar), $Heap);
+    ##other#0 := other#0;
+    assume $IsAlloc(##other#0, TSeq(TChar), $Heap);
+    assert {:subsumption 0} Seq#Length(##pattern#0) > 0;
+    assume Seq#Length(##pattern#0) > 0;
+    assume M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
+    assume Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LZ), remainingString#0, pattern#0, other#0));
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursive", " | ", "20339"} true;
+    return;
+}
+
+
+
+procedure Call$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (newString#0: Seq Box where $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap));
+  requires Seq#Length(pattern#0) > 0;
+  requires Seq#Length(other#0) >= LitInt(0);
+  modifies $Heap, $Tick;
+  free ensures M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
+  ensures Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LS($LZ)), remainingString#0, pattern#0, other#0));
+  free ensures (forall $o: ref :: { $Heap[$o] } $o != null && read(old($Heap), $o, alloc) ==> $Heap[$o] == old($Heap)[$o]);
+  free ensures $HeapSucc(old($Heap), $Heap);
+
+
+
+procedure Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (defass#newString#0: bool, newString#0: Seq Box where defass#newString#0 ==> $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap), $_reverifyPost: bool);
+  free requires 2 == $FunctionContextHeight;
+  requires Seq#Length(pattern#0) > 0;
+  requires Seq#Length(other#0) >= LitInt(0);
+  modifies $Heap, $Tick;
+  free ensures M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
+  ensures Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LS($LZ)), remainingString#0, pattern#0, other#0));
+  free ensures (forall $o: ref :: { $Heap[$o] } $o != null && read(old($Heap), $o, alloc) ==> $Heap[$o] == old($Heap)[$o]);
+  free ensures $HeapSucc(old($Heap), $Heap);
+
+
+
+implementation Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box) returns (defass#newString#0: bool, newString#0: Seq Box, $_reverifyPost: bool)
+{
+  var $_Frame: <beta>[ref,Field beta]bool;
+  var prefixedInner#1_0: Seq Box where $Is(prefixedInner#1_0, TSeq(TChar)) && $IsAlloc(prefixedInner#1_0, TSeq(TChar), $Heap);
+  var $rhs##1_0: Seq Box where $Is($rhs##1_0, TSeq(TChar)) && $IsAlloc($rhs##1_0, TSeq(TChar), $Heap);
+  var remainingString##1_0: Seq Box;
+  var pattern##1_0: Seq Box;
+  var other##1_0: Seq Box;
+  var first#2_0: Seq Box where $Is(first#2_0, TSeq(TChar)) && $IsAlloc(first#2_0, TSeq(TChar), $Heap);
+  var inner#2_0: Seq Box where $Is(inner#2_0, TSeq(TChar)) && $IsAlloc(inner#2_0, TSeq(TChar), $Heap);
+  var $rhs##2_0: Seq Box where $Is($rhs##2_0, TSeq(TChar)) && $IsAlloc($rhs##2_0, TSeq(TChar), $Heap);
+  var remainingString##2_0: Seq Box;
+  var pattern##2_0: Seq Box;
+  var other##2_0: Seq Box;
+
+  anon0:
+    assume {:print "Impl", " | ", "Impl$$M.__default.replaceRecursive", " | ", remainingString#0, " | ", pattern#0, " | ", other#0} true;
+    assume {:print "Types", " | ", "Seq Box", " | ", "Seq Box", " | ", "Seq Box"} true;
+    $_Frame := (lambda<alpha> $o: ref, $f: Field alpha :: $o != null && read($Heap, $o, alloc) ==> false);
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(35,2): initial state"} true;
+    $_reverifyPost := false;
+    assume {:print} true;
+    assert Seq#Length(remainingString#0) >= LitInt(0) <==> Lit(false);
+    assume {:print} true;
+    assert false;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21167"} true;
+    goto anon9_Then, anon9_Else;
+
+  anon9_Then:
+    assume {:partition} Seq#Length(pattern#0) <= Seq#Length(remainingString#0);
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21169"} true;
+    goto anon2;
+
+  anon9_Else:
+    assume {:partition} Seq#Length(remainingString#0) < Seq#Length(pattern#0);
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21171"} true;
+    goto anon2;
+
+  anon2:
+    assume true;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21178"} true;
+    goto anon10_Then, anon10_Else;
+
+  anon10_Then:
+    assume {:partition} Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0);
+    assume true;
+    assume true;
+    newString#0 := remainingString#0;
+    defass#newString#0 := true;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(40,28)"} true;
+    assert defass#newString#0;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21179"} true;
+    return;
+
+  anon10_Else:
+    assume {:partition} !(Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0));
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21181"} true;
+    assume true;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21188"} true;
+    goto anon5;
+
+  anon5:
+    assume true;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21188"} true;
+    goto anon11_Then, anon11_Else;
+
+  anon11_Then:
+    assume {:partition} Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0));
+    assume true;
+    assert 0 <= Seq#Length(pattern#0) && Seq#Length(pattern#0) <= Seq#Length(remainingString#0);
+    assume true;
+    remainingString##1_0 := Seq#Drop(remainingString#0, Seq#Length(pattern#0));
+    assume true;
+    pattern##1_0 := pattern#0;
+    assume true;
+    other##1_0 := other#0;
+    assert (forall<alpha> $o: ref, $f: Field alpha :: false ==> $_Frame[$o, $f]);
+    assert Seq#Rank(remainingString##1_0) < Seq#Rank(remainingString#0) || (Seq#Rank(remainingString##1_0) == Seq#Rank(remainingString#0) && (Seq#Rank(pattern##1_0) < Seq#Rank(pattern#0) || (Seq#Rank(pattern##1_0) == Seq#Rank(pattern#0) && Seq#Rank(other##1_0) < Seq#Rank(other#0))));
+    call $rhs##1_0 := Call$$M.__default.replaceRecursive(remainingString##1_0, pattern##1_0, other##1_0);
+    prefixedInner#1_0 := $rhs##1_0;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(44,96)"} true;
+    assume true;
+    assume true;
+    newString#0 := Seq#Append(other#0, prefixedInner#1_0);
+    defass#newString#0 := true;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(45,34)"} true;
+    assert defass#newString#0;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21189"} true;
+    return;
+
+  anon11_Else:
+    assume {:partition} !(Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)));
+    assume true;
+    assert 0 <= LitInt(1) && LitInt(1) <= Seq#Length(remainingString#0);
+    assume true;
+    first#2_0 := Seq#Take(remainingString#0, LitInt(1));
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(47,46)"} true;
+    assume true;
+    assert 0 <= LitInt(1) && LitInt(1) <= Seq#Length(remainingString#0);
+    assume true;
+    remainingString##2_0 := Seq#Drop(remainingString#0, LitInt(1));
+    assume true;
+    pattern##2_0 := pattern#0;
+    assume true;
+    other##2_0 := other#0;
+    assert (forall<alpha> $o: ref, $f: Field alpha :: false ==> $_Frame[$o, $f]);
+    assert Seq#Rank(remainingString##2_0) < Seq#Rank(remainingString#0) || (Seq#Rank(remainingString##2_0) == Seq#Rank(remainingString#0) && (Seq#Rank(pattern##2_0) < Seq#Rank(pattern#0) || (Seq#Rank(pattern##2_0) == Seq#Rank(pattern#0) && Seq#Rank(other##2_0) < Seq#Rank(other#0))));
+    call $rhs##2_0 := Call$$M.__default.replaceRecursive(remainingString##2_0, pattern##2_0, other##2_0);
+    inner#2_0 := $rhs##2_0;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(48,80)"} true;
+    assume true;
+    assume true;
+    newString#0 := Seq#Append(first#2_0, inner#2_0);
+    defass#newString#0 := true;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(49,26)"} true;
+    assert defass#newString#0;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21190"} true;
+    return;
+
+  anon8:
+    assert defass#newString#0;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21192"} true;
     return;
 }
 
@@ -1533,22 +1941,28 @@ const unique tytagFamily$_#PartialFunc0: TyTagFamily;
 
 const unique tytagFamily$_#TotalFunc0: TyTagFamily;
 
+const unique tytagFamily$_#Func3: TyTagFamily;
+
+const unique tytagFamily$_#PartialFunc3: TyTagFamily;
+
+const unique tytagFamily$_#TotalFunc3: TyTagFamily;
+
 const unique tytagFamily$_tuple#2: TyTagFamily;
 
 const unique tytagFamily$_tuple#0: TyTagFamily;
 
 const unique tytagFamily$_default: TyTagFamily;
 
-implementation Call$$M.__default.foo(a#0: int, b#0: int) returns (c#0: int)
+implementation Call$$M.__default.replaceRecursive(remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box) returns (newString#0: Seq Box)
 {
-  var defass#c#0: bool;
+  var defass#newString#0: bool;
   var $_reverifyPost: bool;
 
   anon_0:
-    assume {:print "Impl", " | ", "Call$$M.__default.foo", " | ", a#0, " | ", b#0} true;
-    assume {:print "Types", " | ", "int", " | ", "int"} true;
-    call defass#c#0, c#0, $_reverifyPost := Impl$$M.__default.foo(a#0, b#0);
-    assume {:print "Block", " | ", "Call$$M.__default.foo", " | ", "17082"} true;
+    assume {:print "Impl", " | ", "Call$$M.__default.replaceRecursive", " | ", remainingString#0, " | ", pattern#0, " | ", other#0} true;
+    assume {:print "Types", " | ", "Seq Box", " | ", "Seq Box", " | ", "Seq Box"} true;
+    call defass#newString#0, newString#0, $_reverifyPost := Impl$$M.__default.replaceRecursive(remainingString#0, pattern#0, other#0);
+    assume {:print "Block", " | ", "Call$$M.__default.replaceRecursive", " | ", "21202"} true;
     return;
 }
 

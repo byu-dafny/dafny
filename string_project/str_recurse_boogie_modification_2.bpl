@@ -1770,8 +1770,8 @@ implementation CheckWellformed$$M.__default.replaceRecursive(remainingString#0: 
 
 
 procedure Call$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (newString#0: Seq Box where $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap));
+  requires Seq#Length(remainingString#0) >= LitInt(0);
   requires Seq#Length(pattern#0) > 0;
-  requires Seq#Length(other#0) >= LitInt(0);
   modifies $Heap, $Tick;
   free ensures M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
   ensures Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LS($LZ)), remainingString#0, pattern#0, other#0));
@@ -1782,8 +1782,8 @@ procedure Call$$M.__default.replaceRecursive(remainingString#0: Seq Box where $I
 
 procedure Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (defass#newString#0: bool, newString#0: Seq Box where defass#newString#0 ==> $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap), $_reverifyPost: bool);
   free requires 2 == $FunctionContextHeight;
+  requires Seq#Length(remainingString#0) >= LitInt(0);
   requires Seq#Length(pattern#0) > 0;
-  requires Seq#Length(other#0) >= LitInt(0);
   modifies $Heap, $Tick;
   free ensures M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
   ensures Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LS($LZ)), remainingString#0, pattern#0, other#0));
@@ -1814,7 +1814,7 @@ implementation Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box, pa
     assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(35,2): initial state"} true;
     $_reverifyPost := false;
     assume {:print} true;
-    assert (Seq#Length(remainingString#0) >= LitInt(0)) == Lit(false);
+    assert (Seq#Length(other#0) >= LitInt(0)) == Lit(false);
     assume {:print} true;
     assert false;
     assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21167"} true;

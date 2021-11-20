@@ -306,7 +306,7 @@ axiom (forall a: ClassName, b: ClassName :: { TypeTuple(a, b) } TypeTupleCar(Typ
 
 function SetRef_to_SetBox(s: [ref]bool) : Set Box;
 
-axiom (forall s: [ref]bool, bx: Box :: { SetRef_to_SetBox(s)[bx] } SetRef_to_SetBox(s)[bx] == s[$Unbox(bx): ref]);
+axiom (forall s: [ref]bool, bx: Box :: { SetRef_to_SetBox(s)[bx] } SetRef_to_SetBox(s)[bx] <==> s[$Unbox(bx): ref]);
 
 axiom (forall s: [ref]bool :: { SetRef_to_SetBox(s) } $Is(SetRef_to_SetBox(s), TSet(Tclass._System.object?())));
 
@@ -346,7 +346,7 @@ axiom (forall o: ORDINAL :: { ORD#Offset(o) } { ORD#IsNat(o) } ORD#IsNat(o) ==> 
 
 function ORD#Less(ORDINAL, ORDINAL) : bool;
 
-axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Less(o, p) } (ORD#Less(o, p) ==> o != p) && (ORD#IsNat(o) && !ORD#IsNat(p) ==> ORD#Less(o, p)) && (ORD#IsNat(o) && ORD#IsNat(p) ==> ORD#Less(o, p) == (ORD#Offset(o) < ORD#Offset(p))) && (ORD#Less(o, p) && ORD#IsNat(p) ==> ORD#IsNat(o)));
+axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Less(o, p) } (ORD#Less(o, p) ==> o != p) && (ORD#IsNat(o) && !ORD#IsNat(p) ==> ORD#Less(o, p)) && (ORD#IsNat(o) && ORD#IsNat(p) ==> (ORD#Less(o, p) <==> ORD#Offset(o) < ORD#Offset(p))) && (ORD#Less(o, p) && ORD#IsNat(p) ==> ORD#IsNat(o)));
 
 axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Less(o, p), ORD#Less(p, o) } ORD#Less(o, p) || o == p || ORD#Less(p, o));
 
@@ -354,11 +354,11 @@ axiom (forall o: ORDINAL, p: ORDINAL, r: ORDINAL :: { ORD#Less(o, p), ORD#Less(p
 
 function ORD#LessThanLimit(ORDINAL, ORDINAL) : bool;
 
-axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#LessThanLimit(o, p) } ORD#LessThanLimit(o, p) == ORD#Less(o, p));
+axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#LessThanLimit(o, p) } ORD#LessThanLimit(o, p) <==> ORD#Less(o, p));
 
 function ORD#Plus(ORDINAL, ORDINAL) : ORDINAL;
 
-axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Plus(o, p) } (ORD#IsNat(ORD#Plus(o, p)) ==> ORD#IsNat(o) && ORD#IsNat(p)) && (ORD#IsNat(p) ==> ORD#IsNat(ORD#Plus(o, p)) == ORD#IsNat(o) && ORD#Offset(ORD#Plus(o, p)) == ORD#Offset(o) + ORD#Offset(p)));
+axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Plus(o, p) } (ORD#IsNat(ORD#Plus(o, p)) ==> ORD#IsNat(o) && ORD#IsNat(p)) && (ORD#IsNat(p) ==> (ORD#IsNat(ORD#Plus(o, p)) <==> ORD#IsNat(o)) && ORD#Offset(ORD#Plus(o, p)) == ORD#Offset(o) + ORD#Offset(p)));
 
 axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Plus(o, p) } (o == ORD#Plus(o, p) || ORD#Less(o, ORD#Plus(o, p))) && (p == ORD#Plus(o, p) || ORD#Less(p, ORD#Plus(o, p))));
 
@@ -366,7 +366,7 @@ axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Plus(o, p) } (o == ORD#FromNat(0) 
 
 function ORD#Minus(ORDINAL, ORDINAL) : ORDINAL;
 
-axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Minus(o, p) } ORD#IsNat(p) && ORD#Offset(p) <= ORD#Offset(o) ==> ORD#IsNat(ORD#Minus(o, p)) == ORD#IsNat(o) && ORD#Offset(ORD#Minus(o, p)) == ORD#Offset(o) - ORD#Offset(p));
+axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Minus(o, p) } ORD#IsNat(p) && ORD#Offset(p) <= ORD#Offset(o) ==> (ORD#IsNat(ORD#Minus(o, p)) <==> ORD#IsNat(o)) && ORD#Offset(ORD#Minus(o, p)) == ORD#Offset(o) - ORD#Offset(p));
 
 axiom (forall o: ORDINAL, p: ORDINAL :: { ORD#Minus(o, p) } ORD#IsNat(p) && ORD#Offset(p) <= ORD#Offset(o) ==> (p == ORD#FromNat(0) && ORD#Minus(o, p) == o) || (p != ORD#FromNat(0) && ORD#Less(ORD#Minus(o, p), o)));
 
@@ -909,7 +909,7 @@ axiom (forall<U,V> m: Map U V :: { Set#Card(Map#Items(m)) } Set#Card(Map#Items(m
 
 function Map#Values<U,V>(Map U V) : Set V;
 
-axiom (forall<U,V> m: Map U V, v: V :: { Map#Values(m)[v] } Map#Values(m)[v] == (exists u: U :: { Map#Domain(m)[u] } { Map#Elements(m)[u] } Map#Domain(m)[u] && v == Map#Elements(m)[u]));
+axiom (forall<U,V> m: Map U V, v: V :: { Map#Values(m)[v] } Map#Values(m)[v] <==> (exists u: U :: { Map#Domain(m)[u] } { Map#Elements(m)[u] } Map#Domain(m)[u] && v == Map#Elements(m)[u]));
 
 function Map#Items<U,V>(Map U V) : Set Box;
 
@@ -935,7 +935,7 @@ axiom (forall a: [Box]bool, b: [Box]Box, t0: Ty, t1: Ty :: { Map#Glue(a, b, TMap
 
 function Map#Build<U,V>(Map U V, U, V) : Map U V;
 
-axiom (forall<U,V> m: Map U V, u: U, u': U, v: V :: { Map#Domain(Map#Build(m, u, v))[u'] } { Map#Elements(Map#Build(m, u, v))[u'] } (u' == u ==> Map#Domain(Map#Build(m, u, v))[u'] && Map#Elements(Map#Build(m, u, v))[u'] == v) && (u' != u ==> Map#Domain(Map#Build(m, u, v))[u'] == Map#Domain(m)[u'] && Map#Elements(Map#Build(m, u, v))[u'] == Map#Elements(m)[u']));
+axiom (forall<U,V> m: Map U V, u: U, u': U, v: V :: { Map#Domain(Map#Build(m, u, v))[u'] } { Map#Elements(Map#Build(m, u, v))[u'] } (u' == u ==> Map#Domain(Map#Build(m, u, v))[u'] && Map#Elements(Map#Build(m, u, v))[u'] == v) && (u' != u ==> (Map#Domain(Map#Build(m, u, v))[u'] <==> Map#Domain(m)[u']) && Map#Elements(Map#Build(m, u, v))[u'] == Map#Elements(m)[u']));
 
 axiom (forall<U,V> m: Map U V, u: U, v: V :: { Map#Card(Map#Build(m, u, v)) } Map#Domain(m)[u] ==> Map#Card(Map#Build(m, u, v)) == Map#Card(m));
 
@@ -955,7 +955,7 @@ axiom (forall<U,V> m: Map U V, s: Set U, u: U :: { Map#Elements(Map#Subtract(m, 
 
 function Map#Equal<U,V>(Map U V, Map U V) : bool;
 
-axiom (forall<U,V> m: Map U V, m': Map U V :: { Map#Equal(m, m') } Map#Equal(m, m') <==> (forall u: U :: Map#Domain(m)[u] == Map#Domain(m')[u]) && (forall u: U :: Map#Domain(m)[u] ==> Map#Elements(m)[u] == Map#Elements(m')[u]));
+axiom (forall<U,V> m: Map U V, m': Map U V :: { Map#Equal(m, m') } Map#Equal(m, m') <==> (forall u: U :: Map#Domain(m)[u] <==> Map#Domain(m')[u]) && (forall u: U :: Map#Domain(m)[u] ==> Map#Elements(m)[u] == Map#Elements(m')[u]));
 
 axiom (forall<U,V> m: Map U V, m': Map U V :: { Map#Equal(m, m') } Map#Equal(m, m') ==> m == m');
 
@@ -981,7 +981,7 @@ axiom (forall<U,V> m: IMap U V :: { IMap#Items(m) } m == IMap#Empty() <==> IMap#
 
 function IMap#Values<U,V>(IMap U V) : Set V;
 
-axiom (forall<U,V> m: IMap U V, v: V :: { IMap#Values(m)[v] } IMap#Values(m)[v] == (exists u: U :: { IMap#Domain(m)[u] } { IMap#Elements(m)[u] } IMap#Domain(m)[u] && v == IMap#Elements(m)[u]));
+axiom (forall<U,V> m: IMap U V, v: V :: { IMap#Values(m)[v] } IMap#Values(m)[v] <==> (exists u: U :: { IMap#Domain(m)[u] } { IMap#Elements(m)[u] } IMap#Domain(m)[u] && v == IMap#Elements(m)[u]));
 
 function IMap#Items<U,V>(IMap U V) : Set Box;
 
@@ -1001,11 +1001,11 @@ axiom (forall a: [Box]bool, b: [Box]Box, t0: Ty, t1: Ty :: { IMap#Glue(a, b, TIM
 
 function IMap#Build<U,V>(IMap U V, U, V) : IMap U V;
 
-axiom (forall<U,V> m: IMap U V, u: U, u': U, v: V :: { IMap#Domain(IMap#Build(m, u, v))[u'] } { IMap#Elements(IMap#Build(m, u, v))[u'] } (u' == u ==> IMap#Domain(IMap#Build(m, u, v))[u'] && IMap#Elements(IMap#Build(m, u, v))[u'] == v) && (u' != u ==> IMap#Domain(IMap#Build(m, u, v))[u'] == IMap#Domain(m)[u'] && IMap#Elements(IMap#Build(m, u, v))[u'] == IMap#Elements(m)[u']));
+axiom (forall<U,V> m: IMap U V, u: U, u': U, v: V :: { IMap#Domain(IMap#Build(m, u, v))[u'] } { IMap#Elements(IMap#Build(m, u, v))[u'] } (u' == u ==> IMap#Domain(IMap#Build(m, u, v))[u'] && IMap#Elements(IMap#Build(m, u, v))[u'] == v) && (u' != u ==> (IMap#Domain(IMap#Build(m, u, v))[u'] <==> IMap#Domain(m)[u']) && IMap#Elements(IMap#Build(m, u, v))[u'] == IMap#Elements(m)[u']));
 
 function IMap#Equal<U,V>(IMap U V, IMap U V) : bool;
 
-axiom (forall<U,V> m: IMap U V, m': IMap U V :: { IMap#Equal(m, m') } IMap#Equal(m, m') <==> (forall u: U :: IMap#Domain(m)[u] == IMap#Domain(m')[u]) && (forall u: U :: IMap#Domain(m)[u] ==> IMap#Elements(m)[u] == IMap#Elements(m')[u]));
+axiom (forall<U,V> m: IMap U V, m': IMap U V :: { IMap#Equal(m, m') } IMap#Equal(m, m') <==> (forall u: U :: IMap#Domain(m)[u] <==> IMap#Domain(m')[u]) && (forall u: U :: IMap#Domain(m)[u] ==> IMap#Elements(m)[u] == IMap#Elements(m')[u]));
 
 axiom (forall<U,V> m: IMap U V, m': IMap U V :: { IMap#Equal(m, m') } IMap#Equal(m, m') ==> m == m');
 
@@ -1043,19 +1043,19 @@ axiom (forall x: int, y: int :: { INTERNAL_mod_boogie(x, y): int } INTERNAL_mod_
 
 function {:never_pattern true} INTERNAL_lt_boogie(x: int, y: int) : bool;
 
-axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_lt_boogie(x, y): bool } INTERNAL_lt_boogie(x, y): bool == (x < y));
+axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_lt_boogie(x, y): bool } INTERNAL_lt_boogie(x, y): bool <==> x < y);
 
 function {:never_pattern true} INTERNAL_le_boogie(x: int, y: int) : bool;
 
-axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_le_boogie(x, y): bool } INTERNAL_le_boogie(x, y): bool == (x <= y));
+axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_le_boogie(x, y): bool } INTERNAL_le_boogie(x, y): bool <==> x <= y);
 
 function {:never_pattern true} INTERNAL_gt_boogie(x: int, y: int) : bool;
 
-axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_gt_boogie(x, y): bool } INTERNAL_gt_boogie(x, y): bool == (x > y));
+axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_gt_boogie(x, y): bool } INTERNAL_gt_boogie(x, y): bool <==> x > y);
 
 function {:never_pattern true} INTERNAL_ge_boogie(x: int, y: int) : bool;
 
-axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_ge_boogie(x, y): bool } INTERNAL_ge_boogie(x, y): bool == (x >= y));
+axiom (forall x: int, y: int :: {:never_pattern true} { INTERNAL_ge_boogie(x, y): bool } INTERNAL_ge_boogie(x, y): bool <==> x >= y);
 
 function Mul(x: int, y: int) : int;
 
@@ -1183,7 +1183,7 @@ axiom (forall t0: Ty, t1: Ty, heap: Heap, h: [Heap,Box]Box, r: [Heap,Box]bool, r
 
 axiom (forall t0: Ty, t1: Ty, heap: Heap, h: [Heap,Box]Box, r: [Heap,Box]bool, rd: [Heap,Box]Set Box, bx0: Box :: { Requires1(t0, t1, heap, Handle1(h, r, rd), bx0) } r[heap, bx0] ==> Requires1(t0, t1, heap, Handle1(h, r, rd), bx0));
 
-axiom (forall t0: Ty, t1: Ty, heap: Heap, h: [Heap,Box]Box, r: [Heap,Box]bool, rd: [Heap,Box]Set Box, bx0: Box, bx: Box :: { Reads1(t0, t1, heap, Handle1(h, r, rd), bx0)[bx] } Reads1(t0, t1, heap, Handle1(h, r, rd), bx0)[bx] == rd[heap, bx0][bx]);
+axiom (forall t0: Ty, t1: Ty, heap: Heap, h: [Heap,Box]Box, r: [Heap,Box]bool, rd: [Heap,Box]Set Box, bx0: Box, bx: Box :: { Reads1(t0, t1, heap, Handle1(h, r, rd), bx0)[bx] } Reads1(t0, t1, heap, Handle1(h, r, rd), bx0)[bx] <==> rd[heap, bx0][bx]);
 
 function {:inline} Requires1#canCall(t0: Ty, t1: Ty, heap: Heap, f: HandleType, bx0: Box) : bool
 {
@@ -1199,9 +1199,9 @@ axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $
 
 axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $HeapSucc(h0, h1), Reads1(t0, t1, h1, f, bx0) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && (forall<a> o: ref, fld: Field a :: o != null && Reads1(t0, t1, h1, f, bx0)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Reads1(t0, t1, h0, f, bx0) == Reads1(t0, t1, h1, f, bx0));
 
-axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $HeapSucc(h0, h1), Requires1(t0, t1, h1, f, bx0) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && (forall<a> o: ref, fld: Field a :: o != null && Reads1(t0, t1, h0, f, bx0)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Requires1(t0, t1, h0, f, bx0) == Requires1(t0, t1, h1, f, bx0));
+axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $HeapSucc(h0, h1), Requires1(t0, t1, h1, f, bx0) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && (forall<a> o: ref, fld: Field a :: o != null && Reads1(t0, t1, h0, f, bx0)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires1(t0, t1, h0, f, bx0) <==> Requires1(t0, t1, h1, f, bx0)));
 
-axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $HeapSucc(h0, h1), Requires1(t0, t1, h1, f, bx0) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && (forall<a> o: ref, fld: Field a :: o != null && Reads1(t0, t1, h1, f, bx0)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Requires1(t0, t1, h0, f, bx0) == Requires1(t0, t1, h1, f, bx0));
+axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $HeapSucc(h0, h1), Requires1(t0, t1, h1, f, bx0) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && (forall<a> o: ref, fld: Field a :: o != null && Reads1(t0, t1, h1, f, bx0)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires1(t0, t1, h0, f, bx0) <==> Requires1(t0, t1, h1, f, bx0)));
 
 axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $HeapSucc(h0, h1), Apply1(t0, t1, h1, f, bx0) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && (forall<a> o: ref, fld: Field a :: o != null && Reads1(t0, t1, h0, f, bx0)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Apply1(t0, t1, h0, f, bx0) == Apply1(t0, t1, h1, f, bx0));
 
@@ -1209,7 +1209,7 @@ axiom (forall t0: Ty, t1: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box :: { $
 
 axiom (forall t0: Ty, t1: Ty, heap: Heap, f: HandleType, bx0: Box :: { Reads1(t0, t1, $OneHeap, f, bx0), $IsGoodHeap(heap) } { Reads1(t0, t1, heap, f, bx0) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) ==> (Set#Equal(Reads1(t0, t1, $OneHeap, f, bx0), Set#Empty(): Set Box) <==> Set#Equal(Reads1(t0, t1, heap, f, bx0), Set#Empty(): Set Box)));
 
-axiom (forall t0: Ty, t1: Ty, heap: Heap, f: HandleType, bx0: Box :: { Requires1(t0, t1, $OneHeap, f, bx0), $IsGoodHeap(heap) } { Requires1(t0, t1, heap, f, bx0) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && Set#Equal(Reads1(t0, t1, $OneHeap, f, bx0), Set#Empty(): Set Box) ==> Requires1(t0, t1, $OneHeap, f, bx0) == Requires1(t0, t1, heap, f, bx0));
+axiom (forall t0: Ty, t1: Ty, heap: Heap, f: HandleType, bx0: Box :: { Requires1(t0, t1, $OneHeap, f, bx0), $IsGoodHeap(heap) } { Requires1(t0, t1, heap, f, bx0) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $Is(f, Tclass._System.___hFunc1(t0, t1)) && Set#Equal(Reads1(t0, t1, $OneHeap, f, bx0), Set#Empty(): Set Box) ==> (Requires1(t0, t1, $OneHeap, f, bx0) <==> Requires1(t0, t1, heap, f, bx0)));
 
 axiom (forall f: HandleType, t0: Ty, t1: Ty :: { $Is(f, Tclass._System.___hFunc1(t0, t1)) } $Is(f, Tclass._System.___hFunc1(t0, t1)) <==> (forall h: Heap, bx0: Box :: { Apply1(t0, t1, h, f, bx0) } $IsGoodHeap(h) && $IsBox(bx0, t0) && Requires1(t0, t1, h, f, bx0) ==> $IsBox(Apply1(t0, t1, h, f, bx0), t1)));
 
@@ -1283,7 +1283,7 @@ axiom (forall t0: Ty, heap: Heap, h: [Heap]Box, r: [Heap]bool, rd: [Heap]Set Box
 
 axiom (forall t0: Ty, heap: Heap, h: [Heap]Box, r: [Heap]bool, rd: [Heap]Set Box :: { Requires0(t0, heap, Handle0(h, r, rd)) } r[heap] ==> Requires0(t0, heap, Handle0(h, r, rd)));
 
-axiom (forall t0: Ty, heap: Heap, h: [Heap]Box, r: [Heap]bool, rd: [Heap]Set Box, bx: Box :: { Reads0(t0, heap, Handle0(h, r, rd))[bx] } Reads0(t0, heap, Handle0(h, r, rd))[bx] == rd[heap][bx]);
+axiom (forall t0: Ty, heap: Heap, h: [Heap]Box, r: [Heap]bool, rd: [Heap]Set Box, bx: Box :: { Reads0(t0, heap, Handle0(h, r, rd))[bx] } Reads0(t0, heap, Handle0(h, r, rd))[bx] <==> rd[heap][bx]);
 
 function {:inline} Requires0#canCall(t0: Ty, heap: Heap, f: HandleType) : bool
 {
@@ -1299,9 +1299,9 @@ axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), 
 
 axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), Reads0(t0, h1, f) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $Is(f, Tclass._System.___hFunc0(t0)) && (forall<a> o: ref, fld: Field a :: o != null && Reads0(t0, h1, f)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Reads0(t0, h0, f) == Reads0(t0, h1, f));
 
-axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), Requires0(t0, h1, f) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $Is(f, Tclass._System.___hFunc0(t0)) && (forall<a> o: ref, fld: Field a :: o != null && Reads0(t0, h0, f)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Requires0(t0, h0, f) == Requires0(t0, h1, f));
+axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), Requires0(t0, h1, f) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $Is(f, Tclass._System.___hFunc0(t0)) && (forall<a> o: ref, fld: Field a :: o != null && Reads0(t0, h0, f)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires0(t0, h0, f) <==> Requires0(t0, h1, f)));
 
-axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), Requires0(t0, h1, f) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $Is(f, Tclass._System.___hFunc0(t0)) && (forall<a> o: ref, fld: Field a :: o != null && Reads0(t0, h1, f)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Requires0(t0, h0, f) == Requires0(t0, h1, f));
+axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), Requires0(t0, h1, f) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $Is(f, Tclass._System.___hFunc0(t0)) && (forall<a> o: ref, fld: Field a :: o != null && Reads0(t0, h1, f)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires0(t0, h0, f) <==> Requires0(t0, h1, f)));
 
 axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), Apply0(t0, h1, f) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $Is(f, Tclass._System.___hFunc0(t0)) && (forall<a> o: ref, fld: Field a :: o != null && Reads0(t0, h0, f)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Apply0(t0, h0, f) == Apply0(t0, h1, f));
 
@@ -1309,7 +1309,7 @@ axiom (forall t0: Ty, h0: Heap, h1: Heap, f: HandleType :: { $HeapSucc(h0, h1), 
 
 axiom (forall t0: Ty, heap: Heap, f: HandleType :: { Reads0(t0, $OneHeap, f), $IsGoodHeap(heap) } { Reads0(t0, heap, f) } $IsGoodHeap(heap) && $Is(f, Tclass._System.___hFunc0(t0)) ==> (Set#Equal(Reads0(t0, $OneHeap, f), Set#Empty(): Set Box) <==> Set#Equal(Reads0(t0, heap, f), Set#Empty(): Set Box)));
 
-axiom (forall t0: Ty, heap: Heap, f: HandleType :: { Requires0(t0, $OneHeap, f), $IsGoodHeap(heap) } { Requires0(t0, heap, f) } $IsGoodHeap(heap) && $Is(f, Tclass._System.___hFunc0(t0)) && Set#Equal(Reads0(t0, $OneHeap, f), Set#Empty(): Set Box) ==> Requires0(t0, $OneHeap, f) == Requires0(t0, heap, f));
+axiom (forall t0: Ty, heap: Heap, f: HandleType :: { Requires0(t0, $OneHeap, f), $IsGoodHeap(heap) } { Requires0(t0, heap, f) } $IsGoodHeap(heap) && $Is(f, Tclass._System.___hFunc0(t0)) && Set#Equal(Reads0(t0, $OneHeap, f), Set#Empty(): Set Box) ==> (Requires0(t0, $OneHeap, f) <==> Requires0(t0, heap, f)));
 
 axiom (forall f: HandleType, t0: Ty :: { $Is(f, Tclass._System.___hFunc0(t0)) } $Is(f, Tclass._System.___hFunc0(t0)) <==> (forall h: Heap :: { Apply0(t0, h, f) } $IsGoodHeap(h) && Requires0(t0, h, f) ==> $IsBox(Apply0(t0, h, f), t0)));
 
@@ -1387,7 +1387,7 @@ axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]B
 
 axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]Box, r: [Heap,Box,Box,Box]bool, rd: [Heap,Box,Box,Box]Set Box, bx0: Box, bx1: Box, bx2: Box :: { Requires3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2) } r[heap, bx0, bx1, bx2] ==> Requires3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2));
 
-axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]Box, r: [Heap,Box,Box,Box]bool, rd: [Heap,Box,Box,Box]Set Box, bx0: Box, bx1: Box, bx2: Box, bx: Box :: { Reads3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2)[bx] } Reads3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2)[bx] == rd[heap, bx0, bx1, bx2][bx]);
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, h: [Heap,Box,Box,Box]Box, r: [Heap,Box,Box,Box]bool, rd: [Heap,Box,Box,Box]Set Box, bx0: Box, bx1: Box, bx2: Box, bx: Box :: { Reads3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2)[bx] } Reads3(t0, t1, t2, t3, heap, Handle3(h, r, rd), bx0, bx1, bx2)[bx] <==> rd[heap, bx0, bx1, bx2][bx]);
 
 function {:inline} Requires3#canCall(t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box) : bool
 {
@@ -1403,9 +1403,9 @@ axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType,
 
 axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
 
-axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Requires3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) <==> Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)));
 
-axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Requires3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> (Requires3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) <==> Requires3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2)));
 
 axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { $HeapSucc(h0, h1), Apply3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2) } $HeapSucc(h0, h1) && $IsGoodHeap(h0) && $IsGoodHeap(h1) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && (forall<a> o: ref, fld: Field a :: o != null && Reads3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2)[$Box(o)] ==> read(h0, o, fld) == read(h1, o, fld)) ==> Apply3(t0, t1, t2, t3, h0, f, bx0, bx1, bx2) == Apply3(t0, t1, t2, t3, h1, f, bx0, bx1, bx2));
 
@@ -1413,7 +1413,7 @@ axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, h0: Heap, h1: Heap, f: HandleType,
 
 axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), $IsGoodHeap(heap) } { Reads3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) ==> (Set#Equal(Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), Set#Empty(): Set Box) <==> Set#Equal(Reads3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2), Set#Empty(): Set Box)));
 
-axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { Requires3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), $IsGoodHeap(heap) } { Requires3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && Set#Equal(Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), Set#Empty(): Set Box) ==> Requires3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2) == Requires3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2));
+axiom (forall t0: Ty, t1: Ty, t2: Ty, t3: Ty, heap: Heap, f: HandleType, bx0: Box, bx1: Box, bx2: Box :: { Requires3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), $IsGoodHeap(heap) } { Requires3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2) } $IsGoodHeap(heap) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) && Set#Equal(Reads3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2), Set#Empty(): Set Box) ==> (Requires3(t0, t1, t2, t3, $OneHeap, f, bx0, bx1, bx2) <==> Requires3(t0, t1, t2, t3, heap, f, bx0, bx1, bx2)));
 
 axiom (forall f: HandleType, t0: Ty, t1: Ty, t2: Ty, t3: Ty :: { $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) } $Is(f, Tclass._System.___hFunc3(t0, t1, t2, t3)) <==> (forall h: Heap, bx0: Box, bx1: Box, bx2: Box :: { Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) } $IsGoodHeap(h) && $IsBox(bx0, t0) && $IsBox(bx1, t1) && $IsBox(bx2, t2) && Requires3(t0, t1, t2, t3, h, f, bx0, bx1, bx2) ==> $IsBox(Apply3(t0, t1, t2, t3, h, f, bx0, bx1, bx2), t3)));
 
@@ -1601,7 +1601,7 @@ axiom 1 <= $FunctionContextHeight ==> (forall $ly: LayerType, remainingString#0:
 
 function M.__default.replaceRecursiveFunc#requires(LayerType, Seq Box, Seq Box, Seq Box) : bool;
 
-axiom (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc#requires($ly, remainingString#0, pattern#0, other#0) } $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) ==> M.__default.replaceRecursiveFunc#requires($ly, remainingString#0, pattern#0, other#0) == (Seq#Length(pattern#0) > 0));
+axiom (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc#requires($ly, remainingString#0, pattern#0, other#0) } $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) ==> (M.__default.replaceRecursiveFunc#requires($ly, remainingString#0, pattern#0, other#0) <==> Seq#Length(pattern#0) > 0));
 
 axiom 1 <= $FunctionContextHeight ==> (forall $ly: LayerType, remainingString#0: Seq Box, pattern#0: Seq Box, other#0: Seq Box :: { M.__default.replaceRecursiveFunc($LS($ly), remainingString#0, pattern#0, other#0) } M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0) || (1 != $FunctionContextHeight && $Is(remainingString#0, TSeq(TChar)) && $Is(pattern#0, TSeq(TChar)) && $Is(other#0, TSeq(TChar)) && Seq#Length(pattern#0) > 0) ==> (!(Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0)) ==> (Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)) ==> M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0)) && (!(Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0))) ==> M.__default.replaceRecursiveFunc#canCall(Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0))) && M.__default.replaceRecursiveFunc($LS($ly), remainingString#0, pattern#0, other#0) == (if Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0) then remainingString#0 else (if Seq#Length(pattern#0) <= Seq#Length(remainingString#0) && Seq#SameUntil(pattern#0, remainingString#0, Seq#Length(pattern#0)) then Seq#Append(other#0, M.__default.replaceRecursiveFunc($ly, Seq#Drop(remainingString#0, Seq#Length(pattern#0)), pattern#0, other#0)) else Seq#Append(Seq#Take(remainingString#0, LitInt(1)), M.__default.replaceRecursiveFunc($ly, Seq#Drop(remainingString#0, LitInt(1)), pattern#0, other#0)))));
 
@@ -1631,6 +1631,10 @@ implementation CheckWellformed$$M.__default.replaceRecursiveFunc(remainingString
     b$reqreads#0 := true;
     b$reqreads#1 := true;
     assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20032"} true;
+    assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(13,11): initial state"} true;
+    $_Frame := (lambda<alpha> $o: ref, $f: Field alpha :: $o != null && read($Heap, $o, alloc) ==> false);
+    assume Seq#Length(pattern#0) > 0;
+    assume {:print "Block", " | ", "CheckWellformed$$M.__default.replaceRecursiveFunc", " | ", "20034"} true;
     goto anon1;
 
   anon1:
@@ -1748,7 +1752,7 @@ implementation CheckWellformed$$M.__default.replaceRecursive(remainingString#0: 
     assume Seq#Length(remainingString#0) >= LitInt(0);
     assume Seq#Length(pattern#0) > 0;
     assume Seq#Length(other#0) >= LitInt(0);
-    havoc $Heap;
+    havoc $Heap /* where $IsGoodHeap($Heap) && $IsHeapAnchor($Heap) */;
     assume (forall $o: ref :: { $Heap[$o] } $o != null && read(old($Heap), $o, alloc) ==> $Heap[$o] == old($Heap)[$o]);
     assume $HeapSucc(old($Heap), $Heap);
     havoc newString#0;
@@ -1770,8 +1774,8 @@ implementation CheckWellformed$$M.__default.replaceRecursive(remainingString#0: 
 
 
 procedure Call$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (newString#0: Seq Box where $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap));
+  requires Seq#Length(remainingString#0) >= LitInt(0);
   requires Seq#Length(pattern#0) > 0;
-  requires Seq#Length(other#0) >= LitInt(0);
   modifies $Heap, $Tick;
   free ensures M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
   ensures Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LS($LZ)), remainingString#0, pattern#0, other#0));
@@ -1782,8 +1786,8 @@ procedure Call$$M.__default.replaceRecursive(remainingString#0: Seq Box where $I
 
 procedure Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box where $Is(remainingString#0, TSeq(TChar)) && $IsAlloc(remainingString#0, TSeq(TChar), $Heap), pattern#0: Seq Box where $Is(pattern#0, TSeq(TChar)) && $IsAlloc(pattern#0, TSeq(TChar), $Heap), other#0: Seq Box where $Is(other#0, TSeq(TChar)) && $IsAlloc(other#0, TSeq(TChar), $Heap)) returns (defass#newString#0: bool, newString#0: Seq Box where defass#newString#0 ==> $Is(newString#0, TSeq(TChar)) && $IsAlloc(newString#0, TSeq(TChar), $Heap), $_reverifyPost: bool);
   free requires 2 == $FunctionContextHeight;
+  requires Seq#Length(remainingString#0) >= LitInt(0);
   requires Seq#Length(pattern#0) > 0;
-  requires Seq#Length(other#0) >= LitInt(0);
   modifies $Heap, $Tick;
   free ensures M.__default.replaceRecursiveFunc#canCall(remainingString#0, pattern#0, other#0);
   ensures Seq#Equal(newString#0, M.__default.replaceRecursiveFunc($LS($LS($LZ)), remainingString#0, pattern#0, other#0));
@@ -1814,7 +1818,7 @@ implementation Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box, pa
     assume {:captureState "/workspaces/dafny/string_project/str_recurse.dfy(35,2): initial state"} true;
     $_reverifyPost := false;
     assume {:print} true;
-    assert (Seq#Length(remainingString#0) >= LitInt(0)) == Lit(false);
+    assert Seq#Length(other#0) >= LitInt(0) <==> Lit(false);
     assume {:print} true;
     assert false;
     assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21167"} true;
@@ -1849,6 +1853,8 @@ implementation Impl$$M.__default.replaceRecursive(remainingString#0: Seq Box, pa
   anon10_Else:
     assume {:partition} !(Seq#Length(remainingString#0) < Seq#Length(pattern#0) || Seq#Length(remainingString#0) == LitInt(0));
     assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21181"} true;
+    assume true;
+    assume {:print "Block", " | ", "Impl$$M.__default.replaceRecursive", " | ", "21188"} true;
     goto anon5;
 
   anon5:
