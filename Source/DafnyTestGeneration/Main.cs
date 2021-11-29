@@ -69,10 +69,21 @@ namespace DafnyTestGeneration {
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
 
       // Create modifications of the program with assertions for each block\path
-      ProgramModifier programModifier =
-        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path
-          ? new PathBasedModifier()
-          : new BlockBasedModifier();
+      ProgramModifier programModifier;
+      switch(DafnyOptions.O.TestGenOptions.Mode)
+      {
+        case TestGenerationOptions.Modes.Path:
+          programModifier = new PathBasedModifier();
+          break;
+        case TestGenerationOptions.Modes.Block:
+          programModifier = new BlockBasedModifier();
+          break;
+        case TestGenerationOptions.Modes.MCDC:
+          programModifier = new MCDCBasedModifier();
+          break;
+        default:
+          throw new Exception();
+      }
       return programModifier.GetModifications(boogiePrograms);
     }
 
