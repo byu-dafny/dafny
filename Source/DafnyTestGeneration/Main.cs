@@ -99,7 +99,6 @@ namespace DafnyTestGeneration {
 
       if (DafnyOptions.O.TestGenOptions.PrintBoogieFile != null) {
         for (var i = modifications.Count - 1; i >= 0; i--) {
-          //Console.Write(modifications[i].ToString());
 
           string filename = DafnyOptions.O.TestGenOptions.PrintBoogieFile;
 
@@ -112,12 +111,15 @@ namespace DafnyTestGeneration {
       // Generate tests based on counterexamples produced from modifications
       var testMethods = new ConcurrentBag<TestMethod>();
       for (var i = modifications.Count - 1; i >= 0; i--) {
+        //Console.Out.Write("Getting counterexample\n");
         var log = modifications[i].GetCounterExampleLog();
+        //Console.Out.Write(log);
         if (log == null) {
           continue;
         }
         var testMethod = new TestMethod(dafnyInfo, log);
         if (testMethods.Contains(testMethod)) {
+          //Console.Out.Write("Test method is already there");
           continue;
         }
         testMethods.Add(testMethod);
