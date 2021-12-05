@@ -10,7 +10,7 @@ namespace DafnyTestGeneration {
     private const String PARTITION = "partition";
     private const String CAPTURE_STATE = "captureState";
     private Dictionary<GotoCmd, Decision> gotoToDecisionMapper = new Dictionary<GotoCmd, Decision>();
-    private Dictionary<String, List<GotoCmd>> wantedBlocks = new Dictionary<String, List<GotoCmd>>();
+    //private Dictionary<String, List<GotoCmd>> wantedBlocks = new Dictionary<String, List<GotoCmd>>();
 
     public Dictionary<GotoCmd, Decision> GotoDecisionMapper { get {return gotoToDecisionMapper;} }
 
@@ -18,33 +18,42 @@ namespace DafnyTestGeneration {
     private List<Expr> tempNaryList = new List<Expr>();
     private List<Expr> tempIdentList = new List<Expr>();
 
+    private bool activeFirstGotoCmd = false;
+    private GotoCmd? activeGotoCmd;
+
 
     // node.labelTargets : Block, node.labelNames : String
     public override GotoCmd VisitGotoCmd(GotoCmd node) {
-      if (node.labelNames.Count > 1) {
-        if (wantedBlocks.ContainsKey(node.labelNames[0])) {
-          wantedBlocks[node.labelNames[0]].Add(node);
-        }
-        else {
-          var list = new List<GotoCmd>();
-          list.Add(node);
-          wantedBlocks.Add(node.labelNames[0], list);
-        }
+      if (!activeFirstGotoCmd && node.labelNames.Count > 1) {
+        // if (wantedBlocks.ContainsKey(node.labelNames[0])) {
+        //   wantedBlocks[node.labelNames[0]].Add(node);
+        // }
+        // else {
+        //   var list = new List<GotoCmd>();
+        //   list.Add(node);
+        //   wantedBlocks.Add(node.labelNames[0], list);
+        // }
+        activeFirstGotoCmd = true;
+        activeGotoCmd = node;
+        Console.Out.WriteLine("Making active goto");
       }
-      base.VisitGotoCmd(node);
+      //VisitGotoCmd(node);
       return node;
     }
 
     public override Block VisitBlock(Block node) {
-      if (wantedBlocks.ContainsKey(node.Label)) {
+      //if (wantedBlocks.ContainsKey(node.Label)) {
+      if (activeFirstGotoCmd) {
         var decision = VisitBlockReturnDecision(node);
         if (decision != null) {
-          foreach (var assumeCmd in wantedBlocks[node.Label]) {
-            gotoToDecisionMapper.Add(assumeCmd, decision);
+          //foreach (var assumeCmd in wantedBlocks[node.Label]) {
+            gotoToDecisionMapper.Add(activeGotoCmd, decision);
             tempNaryList.Clear();
             tempIdentList.Clear();
-            //Console.Out.Write("adding " + decision.decisionExpr.ToString() + "\n");
-          }
+            activeFirstGotoCmd = false;
+            activeGotoCmd = null;
+            Console.Out.Write("adding " + decision.decisionExpr.ToString() + "\n");
+          //}
         }
       }
       base.VisitBlock(node);

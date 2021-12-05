@@ -61,12 +61,12 @@ namespace DafnyTestGeneration {
     private Cmd createAssertion(Dictionary<String, bool> testCase) {
       List<String> keyList = new List<String>(testCase.Keys);
 
-      var varsCond = string.Join("||", keyList.ConvertAll(x => testCase[x] ? x : $"!({x})"));
+      var varsCond = string.Join("&&", keyList.ConvertAll(x => testCase[x] ? x : $"!({x})"));
       //Console.Out.Write("varsCond is " + varsCond + "\n");
 
       var assertCmd = (AssertCmd) GetCmd($"assert !({varsCond});");
 
-      //Console.Out.Write("Assert is " + assertCmd.ToString() + "\n");
+      Console.Out.Write("Assert is " + assertCmd.ToString() + "\n");
 
       return assertCmd;
     }
