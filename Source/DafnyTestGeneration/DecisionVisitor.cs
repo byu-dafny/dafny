@@ -9,7 +9,7 @@ namespace DafnyTestGeneration {
 
     private const String PARTITION = "partition";
     private const String CAPTURE_STATE = "captureState";
-    private Dictionary<GotoCmd, Decision> gotoToDecisionMapper = new Dictionary<GotoCmd, Decision>();
+    private Dictionary<GotoCmd, Decision> gotoToDecisionMapper = new ();
     //private Dictionary<String, List<GotoCmd>> wantedBlocks = new Dictionary<String, List<GotoCmd>>();
 
     public Dictionary<GotoCmd, Decision> GotoDecisionMapper { get {return gotoToDecisionMapper;} }
@@ -18,13 +18,14 @@ namespace DafnyTestGeneration {
     private List<Expr> tempNaryList = new List<Expr>();
     private List<Expr> tempIdentList = new List<Expr>();
 
-    private bool activeFirstGotoCmd = false;
     private GotoCmd? activeGotoCmd;
+
+    private const String READ = "read";
 
 
     // node.labelTargets : Block, node.labelNames : String
     public override GotoCmd VisitGotoCmd(GotoCmd node) {
-      if (!activeFirstGotoCmd && node.labelNames.Count > 1) {
+      if (activeGotoCmd == null && node.labelNames.Count > 1) {
         // if (wantedBlocks.ContainsKey(node.labelNames[0])) {
         //   wantedBlocks[node.labelNames[0]].Add(node);
         // }
@@ -33,9 +34,7 @@ namespace DafnyTestGeneration {
         //   list.Add(node);
         //   wantedBlocks.Add(node.labelNames[0], list);
         // }
-        activeFirstGotoCmd = true;
         activeGotoCmd = node;
-        Console.Out.WriteLine("Making active goto");
       }
       //VisitGotoCmd(node);
       return node;
@@ -43,16 +42,15 @@ namespace DafnyTestGeneration {
 
     public override Block VisitBlock(Block node) {
       //if (wantedBlocks.ContainsKey(node.Label)) {
-      if (activeFirstGotoCmd) {
+      if (activeGotoCmd != null) {
         var decision = VisitBlockReturnDecision(node);
         if (decision != null) {
           //foreach (var assumeCmd in wantedBlocks[node.Label]) {
             gotoToDecisionMapper.Add(activeGotoCmd, decision);
             tempNaryList.Clear();
             tempIdentList.Clear();
-            activeFirstGotoCmd = false;
             activeGotoCmd = null;
-            Console.Out.Write("adding " + decision.decisionExpr.ToString() + "\n");
+            //Console.Out.Write("adding " + decision.decisionExpr.ToString() + "\n");
           //}
         }
       }
@@ -72,7 +70,7 @@ namespace DafnyTestGeneration {
           var assume = (AssumeCmd) cmd;
           if (assume.Attributes != null && assume.Attributes.Key == PARTITION) {
             potentialDecision = assume.Expr;
-            //Console.Out.Write("potentialDecision is " + potentialDecision.GetType() + "\n");
+            //Console.Out.Write("potentialDecision is " + potentialDecision.GetType() + potentialDecision.ToString() + "\n");
             break;
           }
         }
@@ -104,6 +102,7 @@ namespace DafnyTestGeneration {
           //Console.Out.Write("In Nary Expr\n");
           // cast to NAryExpr
           var naryExpr = (NAryExpr) node;
+          //Console.Out.Write("naryExpr fun is " + naryExpr.Fun.ToString());
 
           if (isBoolInfix(naryExpr.Fun)) {
             //Console.Out.Write("Adding " + naryExpr.ToString() + " to tempSet\n");
@@ -116,8 +115,13 @@ namespace DafnyTestGeneration {
                   //Console.Out.Write("Adding " + expr.ToString() + " to tempSet\n");
 
                   tempIdentList.Add(expr);
-                }
+              }
+              this.Visit(node);
             }
+          }
+          else if (naryExpr.Fun.ToString() == "read") {
+            tempIdentList.Add(naryExpr);
+            //Console.Out.Write("Adding " + naryExpr.ToString() + " to tempSet\n");
           }
 
         }
@@ -130,7 +134,7 @@ namespace DafnyTestGeneration {
         }
       }
       else base.VisitExpr(node);
-      return (Expr) this.Visit(node);
+      return (Expr) node;
     }
 
     private bool isBoolSeparator(IAppliable op) {
