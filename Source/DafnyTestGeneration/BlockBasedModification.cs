@@ -17,12 +17,12 @@ namespace DafnyTestGeneration {
       this.capturedStates = capturedStates;
     }
 
-    public override string? GetCounterExampleLog() {
+    public override string? GetCounterExampleLog(int index) {
 
       if (covered.Contains(blockId)) {
         return null;
       }
-      var log = base.GetCounterExampleLog();
+      var log = base.GetCounterExampleLog(index);
       if (log == null) {
         return null;
       }

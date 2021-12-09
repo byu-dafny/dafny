@@ -354,6 +354,8 @@ namespace DafnyTestGeneration {
                   $"{assignment.childId};");
       }
 
+      lines.Add("assume false;");
+
       // the method call itself:
       string methodCall;
       if (DafnyInfo.IsStatic(MethodName)) {

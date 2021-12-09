@@ -108,7 +108,7 @@ namespace DafnyTestGeneration {
       return program.Implementations.ToList()[0].Blocks[0].cmds[0];
     }
 
-    private static AssumeCmd GetAssumeCmd(List<string> toPrint) {
+    protected static AssumeCmd GetAssumeCmd(List<string> toPrint) {
       return (AssumeCmd)GetCmd($"assume {{:print " +
                                 $"{string.Join(", \" | \", ", toPrint)}}} true;");
     }

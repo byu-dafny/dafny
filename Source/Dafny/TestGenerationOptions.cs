@@ -10,11 +10,12 @@ namespace Microsoft.Dafny {
   public class TestGenerationOptions : DafnyOptions {
 
     public bool WarnDeadCode = false;
-    public enum Modes { None, Block, Path };
+    public enum Modes { None, Block, Path, Require, Ensure, Ensure_Strength };
     public Modes Mode = Modes.None;
     [CanBeNull] public string TargetMethod = null;
     public uint? SeqLengthLimit = null;
     public uint TestInlineDepth = 0;
+    public string PrintBoogieFile = null;
 
     public override TestGenerationOptions TestGenOptions => null;
 
@@ -28,12 +29,21 @@ namespace Microsoft.Dafny {
           Mode = Modes.Block;
           return true;
 
+        case "generateTestBoogie":
+          if (ps.ConfirmArgumentCount(1)) {
+            PrintBoogieFile = args[ps.i];
+          }
+          return true;
+
         case "generateTestMode":
           if (ps.ConfirmArgumentCount(1)) {
             Mode = args[ps.i] switch {
               "None" => Modes.None,
               "Block" => Modes.Block,
               "Path" => Modes.Path,
+              "Require" => Modes.Require,
+              "Ensure" => Modes.Ensure,
+              "Strength" => Modes.Ensure_Strength,
               _ => throw new Exception("Invalid value for testMode")
             };
           }
