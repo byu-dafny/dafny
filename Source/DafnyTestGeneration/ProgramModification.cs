@@ -34,7 +34,6 @@ namespace DafnyTestGeneration {
       DafnyOptions.O.PrintFile = "-";
       var textRepresentation = Utils.CaptureConsoleOutput(
         () => program.Emit(new TokenTextWriter(Console.Out)));
-      //Console.Out.Write(textRepresentation);
       Microsoft.Boogie.Parser.Parse(textRepresentation, "", out var copy);
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
       DafnyOptions.O.PrintFile = oldPrintFile;
@@ -82,14 +81,10 @@ namespace DafnyTestGeneration {
       ExecutionEngine.CollectModSets(program);
       ExecutionEngine.CoalesceBlocks(program);
       ExecutionEngine.Inline(program);
-      //     Console.Out.Write(Utils.CaptureConsoleOutput(
-      // () => program.Emit(new TokenTextWriter(Console.Out))));
-
       var log = Utils.CaptureConsoleOutput(
         () => ExecutionEngine.InferAndVerify(program,
           new PipelineStatistics(), uniqueId,
           _ => { }, uniqueId));
-
       DafnyOptions.Install(oldOptions);
       // make sure that there is a counterexample (i.e. no parse errors, etc):
       string? line;
