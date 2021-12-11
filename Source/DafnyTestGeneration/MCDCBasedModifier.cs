@@ -11,37 +11,21 @@ namespace DafnyTestGeneration {
 
 
     private Implementation? implInQuestion;
+    private Program? p;
+
+    private Dictionary<GotoCmd, List<Dictionary<String, bool>>> allTestSets = new();
+    private List<ProgramModification> result = new ();
 
     protected override IEnumerable<ProgramModification> GetModifications(Program p) {
-      VisitProgram(p);
-      Dictionary<Block, List<Dictionary<String, bool>>> blocks = new ();
-
-      var result = new List<ProgramModification>();
+      this.p = p;
       
-      DecisionVisitor visitor = new DecisionVisitor();
-      p = visitor.VisitProgram(p);  
+      DecisionVisitor decisionVisitor = new DecisionVisitor();
+      p = decisionVisitor.VisitProgram(p);  
 
       MCDCSuiteGenerator generator = new MCDCSuiteGenerator();
-      var allTestSets = generator.GetTestSuite(visitor.GotoDecisionMapper);
+      allTestSets = generator.GetTestSuite(decisionVisitor.GotoDecisionMapper);
 
-      AssertionInjectionVisitor injectionVisitor = new AssertionInjectionVisitor(allTestSets, blocks);
-      p = injectionVisitor.VisitProgram(p);
-
-      foreach (var block in blocks) {
-        foreach(var test in block.Value) {
-          var assertion = createAssertion(test);
-          var assumeTrue = GetCmd("assume true;");
-
-          block.Key.Cmds.Add(assertion);
-          block.Key.Cmds.Add(assumeTrue);
-
-          if (implInQuestion != null)
-            result.Add(new ProgramModification(p, ProcedureName ?? implInQuestion.Name));
-
-          block.Key.Cmds.Remove(assertion);
-          block.Key.Cmds.Remove(assumeTrue);
-        }
-      }
+      p = VisitProgram(p);
 
       return result;
     }
@@ -50,8 +34,8 @@ namespace DafnyTestGeneration {
       if (!ProcedureIsToBeTested(node.Name)) {
         return node;
       }
-      //Console.Out.Write("Visiting implementation\n");
       implInQuestion = node;
+      base.VisitImplementation(node);
       return node;
     }
 
@@ -59,54 +43,39 @@ namespace DafnyTestGeneration {
       List<String> keyList = new List<String>(testCase.Keys);
 
       var varsCond = string.Join("&&", keyList.ConvertAll(x => testCase[x] ? x : $"!({x})"));
-      //Console.Out.Write("varsCond is " + varsCond + "\n");
-
       var assertCmd = (AssertCmd) GetCmd($"assert !({varsCond});");
-
-      //Console.Out.Write("Assert is " + assertCmd.ToString() + "\n");
 
       return assertCmd;
     }
 
-    public class AssertionInjectionVisitor : StandardVisitor {
+    public override Block VisitBlock(Block node) {
 
-      private Dictionary<GotoCmd, List<Dictionary<String, bool>>> allTestSets = new();
-      private Dictionary<Block, List<Dictionary<String, bool>>> allBlocks = new ();
+      if (node.TransferCmd != null && node.TransferCmd is GotoCmd) {
+        var castedGoto = (GotoCmd) node.TransferCmd;
+        if (allTestSets.ContainsKey(castedGoto)) {
+          foreach(var test in allTestSets[castedGoto]) {
+            var assertion = createAssertion(test);
 
-      public AssertionInjectionVisitor(Dictionary<GotoCmd, List<Dictionary<String, bool>>> allTestSets,
-        Dictionary<Block, List<Dictionary<String, bool>>> allBlocks) {
-        this.allTestSets = allTestSets;
-        this.allBlocks = allBlocks;
+            node.Cmds.Add(assertion);
+
+            if (implInQuestion != null && p != null)
+              result.Add(new ProgramModification(p, ProcedureName ?? implInQuestion.Name));
+
+            node.Cmds.Remove(assertion);
+          } 
+        }         
       }
-
-      public override Block VisitBlock(Block node) {
-        //Console.Out.Write("Visiting block\n");
-
-        if (node.TransferCmd != null && node.TransferCmd.GetType() == typeof(GotoCmd)) {
-          var castedGoto = (GotoCmd) node.TransferCmd;
-          if (allTestSets != null && allTestSets.ContainsKey(castedGoto)) {
-            allBlocks.Add(node, allTestSets[castedGoto]);
-          }
-        }
-        return node;
-      }
-
-
-
-
-      public override Procedure? VisitProcedure(Procedure? node)
-      {
-        if (node == null) {
-          return node;
-        }
-
-        base.VisitProcedure(node);
-    
-        return node;
-      }
-
+      return node;
     }
 
-    
+    public override Procedure? VisitProcedure(Procedure? node)
+    {
+      if (node == null) {
+        return node;
+      }
+
+      base.VisitProcedure(node);
+      return node;
+    }
   }
 }
