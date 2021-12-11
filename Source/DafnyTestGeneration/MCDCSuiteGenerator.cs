@@ -14,19 +14,17 @@ namespace DafnyTestGeneration {
 
         private const Char varIdentPrefix = 'i';
         private const Char varNaryPrefix = 'n';
-        //private Dictionary<Expr, String> exprToString = new Dictionary<Expr, string>();
-        private Dictionary<String, Expr> symbolToExpr = new ();
+        private const Char decisionPrefix = 'd';
         private int decisionNum = 0;
-
+        private Dictionary<String, Expr> symbolToExpr = new ();
 
         public Dictionary<GotoCmd, List<Dictionary<String, bool>>> GetTestSuite(Dictionary<GotoCmd, Decision> decisions) {
-            Dictionary<GotoCmd, List<Dictionary<String, bool>>> allTestSets = new ();
+            Dictionary<GotoCmd, List<Dictionary<String, bool>>> allTestSets = new();
             foreach (var entry in decisions) {
-                //var modifiedDecision = Preprocessing(entry.Value.ToString());
                 var modifiedDecision = Preprocessing(entry.Value);
-                Console.Out.Write("// decision modified to " + modifiedDecision + "\n");
+                //Console.Out.WriteLine("// decision modified to " + modifiedDecision);
 
-                var testSet = PyMCDCFacade.getTestSet(modifiedDecision);
+                var testSet = Generator.getTestSet(modifiedDecision);
 
                 if (testSet != null) {
                     Postprocessing(testSet);
@@ -52,14 +50,12 @@ namespace DafnyTestGeneration {
             var strToModify = new String(decision.decisionExpr.ToString());
 
             for (var i = 0; i < decision.exprNarySet.Count; i++) {
-                var symbolName = varNaryPrefix + i.ToString() + 'd' + decisionNum.ToString();
-                //Console.Out.Write("current nary is " + decision.exprNarySet[i].ToString() + "\n");
+                var symbolName = varNaryPrefix + i.ToString() + decisionPrefix + decisionNum.ToString();
                 strToModify = strToModify.Replace(decision.exprNarySet[i].ToString().Trim(), symbolName);
-                //Console.Out.Write("modified to " + strToModify + "\n");
                 symbolToExpr.Add(symbolName, decision.exprNarySet[i]);
             }
             for (var i = 0; i < decision.exprIdentSet.Count; i++) {
-                var symbolName = varIdentPrefix + i.ToString() + 'd' + decisionNum.ToString();
+                var symbolName = varIdentPrefix + i.ToString() + decisionPrefix + decisionNum.ToString();
                 strToModify = strToModify.Replace(decision.exprIdentSet[i].ToString().Trim(), symbolName);
                 symbolToExpr.Add(symbolName, decision.exprIdentSet[i]);
             }
@@ -70,33 +66,17 @@ namespace DafnyTestGeneration {
             return strToModify;
         }
 
-        // private String Preprocessing(String decision) {
-        //     var exprClone = new String(decision);
-
-        //     exprClone = Regex.Replace(exprClone, "[()]", String.Empty);
-        //     var exprList = new List<String>(exprClone.Split(new [] {"&&", "||"}, StringSplitOptions.RemoveEmptyEntries));
-        //     Console.Out.Write(exprList[0]);
-
-        //     for (var i = 0; i < exprList.Count; i++) {
-        //         exprList[i] = exprList[i].Trim();
-
-        //         var symbolName = varPrefix + i.ToString();
-        //         decision = decision.Replace(exprList[i], symbolName);
-        //         symbolStrToExpr.Add(symbolName, exprList[i]);
-        //     }
-
-        //     decision = decision.Replace("&&", "&");
-        //     decision = decision.Replace("||", "|");
-        //     return decision;
-        // }
-
-        class PyMCDCFacade {
+        class Generator {
             public static List<Dictionary<String, bool>>? getTestSet(String decision) {
                 
-                string fileName = @"/home/deant4/dafny/Source/DafnyTestGeneration/mcdc_test/main.py " + "\"" + decision + "\"";
+                var fileName = Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+                if (fileName == null)
+                    throw new FileNotFoundException("Unable to locate mcdc python script.  Please ensure mcdc_test directory is in DafnyTestGeneration");
+                fileName = Path.Combine(fileName, "Source/DafnyTestGeneration/mcdc_test/main.py");
+                String fileNameWithArgs = fileName + " \"" + decision + "\"";
 
                 Process p = new Process();
-                p.StartInfo = new ProcessStartInfo(@"python3", fileName)
+                p.StartInfo = new ProcessStartInfo(@"python3", fileNameWithArgs)
                 {
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
@@ -104,11 +84,11 @@ namespace DafnyTestGeneration {
                 };
                 p.Start();
 
-                string output = p.StandardOutput.ReadToEnd();
+                String output = p.StandardOutput.ReadToEnd();
                 p.WaitForExit();
 
                 var testSet = JsonConvert.DeserializeObject<List<Dictionary<String, bool>>>(output); 
-                Console.Out.Write("//" + output.ToString());
+                //Console.Out.WriteLine("//" + output.ToString());
 
                 return testSet;
             }

@@ -1,8 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Program = Microsoft.Boogie.Program;
 using Microsoft.Boogie;
-using System.Reflection;
-using System;
 
 namespace DafnyTestGeneration {
   public class DecisionVisitor : ReadOnlyVisitor {
@@ -10,7 +9,6 @@ namespace DafnyTestGeneration {
     private const String PARTITION = "partition";
     private const String CAPTURE_STATE = "captureState";
     private Dictionary<GotoCmd, Decision> gotoToDecisionMapper = new ();
-    //private Dictionary<String, List<GotoCmd>> wantedBlocks = new Dictionary<String, List<GotoCmd>>();
 
     public Dictionary<GotoCmd, Decision> GotoDecisionMapper { get {return gotoToDecisionMapper;} }
 
@@ -20,38 +18,21 @@ namespace DafnyTestGeneration {
 
     private GotoCmd? activeGotoCmd;
 
-    private const String READ = "read";
 
-
-    // node.labelTargets : Block, node.labelNames : String
     public override GotoCmd VisitGotoCmd(GotoCmd node) {
+
       if (activeGotoCmd == null && node.labelNames.Count > 1) {
-        // if (wantedBlocks.ContainsKey(node.labelNames[0])) {
-        //   wantedBlocks[node.labelNames[0]].Add(node);
-        // }
-        // else {
-        //   var list = new List<GotoCmd>();
-        //   list.Add(node);
-        //   wantedBlocks.Add(node.labelNames[0], list);
-        // }
         activeGotoCmd = node;
       }
-      //VisitGotoCmd(node);
       return node;
     }
 
     public override Block VisitBlock(Block node) {
-      //if (wantedBlocks.ContainsKey(node.Label)) {
       if (activeGotoCmd != null) {
         var decision = VisitBlockReturnDecision(node);
         if (decision != null) {
-          //foreach (var assumeCmd in wantedBlocks[node.Label]) {
-            gotoToDecisionMapper.Add(activeGotoCmd, decision);
-            tempNaryList.Clear();
-            tempIdentList.Clear();
-            activeGotoCmd = null;
-            //Console.Out.Write("adding " + decision.decisionExpr.ToString() + "\n");
-          //}
+          gotoToDecisionMapper.Add(activeGotoCmd, decision);
+          ResetAfterCapturingDecision();
         }
       }
       base.VisitBlock(node);
@@ -66,11 +47,10 @@ namespace DafnyTestGeneration {
       while (enumerator.MoveNext()) {
 
         var cmd = enumerator.Current;
-        if (cmd.GetType() == typeof(AssumeCmd)) {
+        if (cmd is AssumeCmd) {
           var assume = (AssumeCmd) cmd;
           if (assume.Attributes != null && assume.Attributes.Key == PARTITION) {
             potentialDecision = assume.Expr;
-            //Console.Out.Write("potentialDecision is " + potentialDecision.GetType() + potentialDecision.ToString() + "\n");
             break;
           }
         }
@@ -79,7 +59,7 @@ namespace DafnyTestGeneration {
       while (enumerator.MoveNext()) {
         
         var cmd = enumerator.Current;
-        if (cmd.GetType() == typeof(AssumeCmd)) {
+        if (cmd is AssumeCmd) {
           var assume = (AssumeCmd) cmd;
           if (assume.Attributes != null && assume.Attributes.Key == CAPTURE_STATE && potentialDecision != null) {
             searchingForExpressions = true;
@@ -98,38 +78,26 @@ namespace DafnyTestGeneration {
     public override Expr VisitExpr(Expr node)
     {
       if (searchingForExpressions) {
-        if (node.GetType() == typeof(NAryExpr)) {
-          //Console.Out.Write("In Nary Expr\n");
-          // cast to NAryExpr
+        if (node is NAryExpr) {
+
           var naryExpr = (NAryExpr) node;
-          //Console.Out.Write("naryExpr fun is " + naryExpr.Fun.ToString());
 
           if (isBoolInfix(naryExpr.Fun)) {
-            //Console.Out.Write("Adding " + naryExpr.ToString() + " to tempSet\n");
-
             tempNaryList.Add(naryExpr);
           }
           else if (isBoolSeparator(naryExpr.Fun)) {
             foreach (var expr in naryExpr.Args) {
-              if (expr.GetType() == typeof(IdentifierExpr)) {
-                  //Console.Out.Write("Adding " + expr.ToString() + " to tempSet\n");
-
+              if (expr is IdentifierExpr) {
                   tempIdentList.Add(expr);
               }
               this.Visit(node);
             }
           }
-          else if (naryExpr.Fun.ToString() == "read") {
+          else {
             tempIdentList.Add(naryExpr);
-            //Console.Out.Write("Adding " + naryExpr.ToString() + " to tempSet\n");
           }
-
         }
         else {
-          //TODO change this, not every visit to identexpr should be saved
-          //Console.Out.Write("Maybe add an else for " + node.GetType() + "\n");
-          //Console.Out.Write("Adding " + node.ToString() + " to tempSet\n");
-
           tempIdentList.Add(node);
         }
       }
@@ -138,7 +106,7 @@ namespace DafnyTestGeneration {
     }
 
     private bool isBoolSeparator(IAppliable op) {
-      if (op.GetType() == typeof(BinaryOperator)) {
+      if (op is BinaryOperator) {
         var binop = (BinaryOperator) op;
         if (binop.Op == BinaryOperator.Opcode.And ||
           binop.Op == BinaryOperator.Opcode.Or) {
@@ -150,7 +118,7 @@ namespace DafnyTestGeneration {
     }
 
     private bool isBoolInfix(IAppliable op) {
-      if (op.GetType() == typeof(BinaryOperator)) {
+      if (op is BinaryOperator) {
         var binop = (BinaryOperator) op;
         if (binop.Op == BinaryOperator.Opcode.Eq || 
           binop.Op == BinaryOperator.Opcode.Neq ||
@@ -162,13 +130,19 @@ namespace DafnyTestGeneration {
           }
         else return false;
       }
-      else if (op.GetType() == typeof(UnaryOperator)) {
+      else if (op is UnaryOperator) {
         var unop = (UnaryOperator) op;
         if (unop.Op == UnaryOperator.Opcode.Not)
           return true;
         else return false;
       }
       else return false;
+    }
+
+    private void ResetAfterCapturingDecision() {
+      tempNaryList.Clear();
+      tempIdentList.Clear();
+      activeGotoCmd = null;
     }
 
     public override Procedure? VisitProcedure(Procedure? node)
