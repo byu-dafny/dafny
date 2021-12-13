@@ -1,9 +1,11 @@
 using System;
+//using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DafnyServer.CounterExampleGeneration;
+using Printer = Microsoft.Dafny.Printer;
 using Microsoft.Boogie;
 
 namespace DafnyTestGeneration {
@@ -26,13 +28,17 @@ namespace DafnyTestGeneration {
     public readonly List<(string parentId, string fieldName, string childId)> Assignments = new();
     private readonly int id = nextId++;
     public readonly DafnyInfo DafnyInfo;
+
+    public readonly OracleInfo OracleInfo;
     // name of the method for which the counterexample is generated
     public readonly string MethodName;
+
     // values of the arguments to be passed to the method call
     public readonly List<string> ArgValues;
 
-    public TestMethod(DafnyInfo dafnyInfo, string log) {
+    public TestMethod(DafnyInfo dafnyInfo, OracleInfo oracleInfo, string log) {
       DafnyInfo = dafnyInfo;
+      OracleInfo = oracleInfo;
       var typeNames = ExtractPrintedInfo(log, "Types | ");
       var argumentNames = ExtractPrintedInfo(log, "Impl | ");
       var dafnyModel = ExtractModel(log);
@@ -331,14 +337,32 @@ namespace DafnyTestGeneration {
     private List<string> TestMethodLines() {
 
       List<string> lines = new();
+      Dictionary<string, string> varMap = new();
+      Dictionary<string, string> oldVarMap = new();
+
 
       // test method parameters and declaration:
       var parameters = string.Join(", ", ObjectsToMock
         .Select(kVPair => $"{kVPair.id}:{kVPair.type}"));
       var returnParNames = new List<string>();
+      
+
       for (var i = 0; i < DafnyInfo.GetReturnTypes(MethodName).Count; i++) {
         returnParNames.Add("r" + i);
+        varMap[OracleInfo.GetRetNames(MethodName)[i]] = "r" + i;
+        oldVarMap[OracleInfo.GetRetNames(MethodName)[i]] = "r" + i;
+        
       }
+      
+      var isInClass = 0;
+      if (!DafnyInfo.IsStatic(MethodName)) {
+        isInClass = 1;
+      }
+      for (var i = 0; i + isInClass < ArgValues.Count; i++){
+        varMap[OracleInfo.GetArgNames(MethodName)[i]] = ArgValues[i + isInClass];
+        oldVarMap[OracleInfo.GetArgNames(MethodName)[i]] = ArgValues[i + isInClass];
+      }
+      
 
       var returnsDeclaration = string.Join(", ",
         Enumerable.Range(0, returnParNames.Count).Select(i =>
@@ -350,8 +374,11 @@ namespace DafnyTestGeneration {
 
       // assignments necessary to set up the test case:
       foreach (var assignment in Assignments) {
+        lines.Add($"var old_{assignment.parentId}_{assignment.fieldName} := {assignment.childId};");
         lines.Add($"{assignment.parentId}.{assignment.fieldName} := " +
                   $"{assignment.childId};");
+        oldVarMap[assignment.fieldName] = $"old_{assignment.parentId}_{assignment.fieldName}";
+        varMap[assignment.fieldName] = $"{assignment.parentId}.{assignment.fieldName}";
       }
 
       // the method call itself:
@@ -372,6 +399,16 @@ namespace DafnyTestGeneration {
       }
 
       lines.Add(returnValues + methodCall);
+      //the oracle
+      //Replacing values in for identifiers
+      OracleEnsReplacer<string> replacer = new(OracleInfo.ensObjects[MethodName], varMap, oldVarMap, "dummy");
+
+      var oracle = "";
+      foreach (var ensure in replacer.ens) {
+        oracle += ($"assert {RemoveOlds(Printer.ExprToString(ensure.E))};\n");
+        //oracle += ($"JUnit5.assertTrue({RemoveOlds(Printer.ExprToString(ensure.E))});\n");
+      }
+      lines.Add(oracle);
       lines.Add("}");
 
       return lines;
@@ -397,6 +434,18 @@ namespace DafnyTestGeneration {
       lines.RemoveAt(0);
       otherLines.RemoveAt(0);
       return string.Join("", lines) == string.Join("", otherLines);
+    }
+
+    private string RemoveOlds(string input){
+      // detecting old keywords
+      string pattern = @"old\((?>\((?<c>)|[^()]+|\)(?<-c>))*(?(c)(?!))\)";
+      Regex regex = new Regex(pattern);
+      List<string> oldExpressions = new();
+      var matches = regex.Matches(input);
+      foreach (Match match in matches){
+        input = input.Replace(match.Value, match.Value.Substring(4, match.Value.Length - 5));
+      }
+      return input;
     }
   }
 }

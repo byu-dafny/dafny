@@ -81,8 +81,8 @@ namespace DafnyTestGeneration {
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<TestMethod> GetTestMethodsForProgram(
-      Program program, DafnyInfo? dafnyInfo = null) {
-
+      Program program, DafnyInfo? dafnyInfo = null, OracleInfo? oracleInfo = null) {
+      oracleInfo ??= new OracleInfo(program);
       dafnyInfo ??= new DafnyInfo(program);
       var modifications = GetModifications(program).ToList();
 
@@ -105,7 +105,7 @@ namespace DafnyTestGeneration {
         if (log == null) {
           continue;
         }
-        var testMethod = new TestMethod(dafnyInfo, log);
+        var testMethod = new TestMethod(dafnyInfo, oracleInfo, log);
         if (testMethods.Contains(testMethod)) {
           continue;
         }

@@ -12731,7 +12731,7 @@ namespace Microsoft.Dafny {
   }
 
   public class NameSegment : ConcreteSyntaxExpression {
-    public readonly string Name;
+    public string Name;
     public readonly List<Type> OptTypeArguments;
     public NameSegment(IToken tok, string name, List<Type> optTypeArguments)
       : base(tok) {
@@ -12901,7 +12901,7 @@ namespace Microsoft.Dafny {
     }
   }
   public class TopDownVisitor<State> {
-    public void Visit(Expression expr, State st) {
+    public virtual void Visit(Expression expr, State st) {
       Contract.Requires(expr != null);
       if (VisitOneExpr(expr, ref st)) {
         // recursively visit all subexpressions and all substatements
