@@ -24,6 +24,7 @@ namespace Microsoft.Dafny {
 
     public class TranslatorFlags {
       public bool InsertChecksums = 0 < CommandLineOptions.Clo.VerifySnapshots;
+      public bool disableShortCircuit = false;
       public string UniqueIdPrefix = null;
     }
 
@@ -7768,15 +7769,19 @@ namespace Microsoft.Dafny {
         switch (e.ResolvedOp) {
           case BinaryExpr.ResolvedOpcode.And:
           case BinaryExpr.ResolvedOpcode.Imp: {
-              BoogieStmtListBuilder b = new BoogieStmtListBuilder(this);
-              CheckWellformed(e.E1, options, locals, b, etran);
-              builder.Add(new Bpl.IfCmd(expr.tok, etran.TrExpr(e.E0), b.Collect(expr.tok), null, null));
+              if(!this.flags.disableShortCircuit) {
+                BoogieStmtListBuilder b = new BoogieStmtListBuilder(this);
+                CheckWellformed(e.E1, options, locals, b, etran);
+                builder.Add(new Bpl.IfCmd(expr.tok, etran.TrExpr(e.E0), b.Collect(expr.tok), null, null));
+              }
             }
             break;
           case BinaryExpr.ResolvedOpcode.Or: {
-              BoogieStmtListBuilder b = new BoogieStmtListBuilder(this);
-              CheckWellformed(e.E1, options, locals, b, etran);
-              builder.Add(new Bpl.IfCmd(expr.tok, Bpl.Expr.Not(etran.TrExpr(e.E0)), b.Collect(expr.tok), null, null));
+              if(!this.flags.disableShortCircuit) {
+                BoogieStmtListBuilder b = new BoogieStmtListBuilder(this);
+                CheckWellformed(e.E1, options, locals, b, etran);
+                builder.Add(new Bpl.IfCmd(expr.tok, Bpl.Expr.Not(etran.TrExpr(e.E0)), b.Collect(expr.tok), null, null));
+              }
             }
             break;
           case BinaryExpr.ResolvedOpcode.Add:

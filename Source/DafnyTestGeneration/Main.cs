@@ -64,16 +64,16 @@ namespace DafnyTestGeneration {
       var oldPrintInstrumented = DafnyOptions.O.PrintInstrumented;
       DafnyOptions.O.PrintInstrumented = true;
       var boogiePrograms = Translator
-        .Translate(program, program.reporter)
+        .Translate(program, program.reporter, new Translator.TranslatorFlags() {disableShortCircuit = true})
         .ToList().ConvertAll(tuple => tuple.Item2);
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
 
       // Create modifications of the program with assertions for each block\path
       ProgramModifier programModifier =
-        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path
-          ? new PathBasedModifier()
-          : new BlockBasedModifier();
-      return programModifier.GetModifications(boogiePrograms);
+        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path ? new PathBasedModifier() :
+        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Branch ? new BranchBasedModifier()
+        : new BlockBasedModifier();
+       return programModifier.GetModifications(boogiePrograms);
     }
 
     /// <summary>
@@ -85,6 +85,18 @@ namespace DafnyTestGeneration {
 
       dafnyInfo ??= new DafnyInfo(program);
       var modifications = GetModifications(program).ToList();
+
+      if (DafnyOptions.O.TestGenOptions.PrintBoogieFile != null) {
+        for (var i = modifications.Count - 1; i >= 0; i--) {
+          //Console.Write(modifications[i].ToString());
+
+          string filename = DafnyOptions.O.TestGenOptions.PrintBoogieFile;
+
+          var tw = filename == "-" ? Console.Out : new StreamWriter(filename.Replace(".", "_modification_" + i + "."));
+          tw.Write(modifications[i].ToString());
+          tw.Flush();
+        }
+      }
 
       // Generate tests based on counterexamples produced from modifications
       var testMethods = new ConcurrentBag<TestMethod>();
