@@ -6,6 +6,7 @@
 *.vsix
 *.vsixmanifest
 *.DS_Store
+*.pyc
 *~
 .#*
 \#*#
