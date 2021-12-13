@@ -7,7 +7,7 @@ namespace Microsoft.Dafny {
   public class TestGenerationOptions {
 
     public bool WarnDeadCode = false;
-    public enum Modes { None, Block, Path };
+    public enum Modes { None, Block, Branch, Path };
     public Modes Mode = Modes.None;
     [CanBeNull] public string TargetMethod = null;
     public uint? SeqLengthLimit = null;
@@ -29,6 +29,7 @@ namespace Microsoft.Dafny {
             Mode = args[ps.i] switch {
               "None" => Modes.None,
               "Block" => Modes.Block,
+              "Branch" => Modes.Branch,
               "Path" => Modes.Path,
               _ => throw new Exception("Invalid value for testMode")
             };
@@ -60,9 +61,10 @@ namespace Microsoft.Dafny {
     }
 
     public string Help => @"
-/generateTestMode:<None|Block|Path>
+/generateTestMode:<None|Block|Branch|Path>
     None is the default and has no effect.
     Block prints block-coverage tests for the given program.
+    Branch prints branch-coverage tests for the given program.
     Path prints path-coverage tests for the given program.
     Using /definiteAssignment:3 and /loopUnroll is highly recommended when
     generating tests.
