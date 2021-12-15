@@ -69,10 +69,23 @@ namespace DafnyTestGeneration {
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
 
       // Create modifications of the program with assertions for each block\path
-      ProgramModifier programModifier =
-        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path
-          ? new PathBasedModifier()
-          : new BlockBasedModifier();
+      // ProgramModifier programModifier =
+      //   DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path
+      //     ? new PathBasedModifier()
+      //     : new BlockBasedModifier();
+      ProgramModifier programModifier;
+      switch(DafnyOptions.O.TestGenOptions.Mode)
+      {
+        case TestGenerationOptions.Modes.Unchange:
+          programModifier = new UnchangeModifier();
+          break;
+        case TestGenerationOptions.Modes.Block:
+          programModifier = new BlockBasedModifier();
+          break;
+        default:
+          programModifier = new PathBasedModifier();
+          break;
+      }
       return programModifier.GetModifications(boogiePrograms);
     }
 
@@ -91,14 +104,25 @@ namespace DafnyTestGeneration {
       for (var i = modifications.Count - 1; i >= 0; i--) {
         var log = modifications[i].GetCounterExampleLog();
         if (log == null) {
+          // Console.Error.WriteLine("No counter example log found");
           continue;
         }
-        var testMethod = new TestMethod(dafnyInfo, log);
-        if (testMethods.Contains(testMethod)) {
-          continue;
+        
+        string[] counterExampleSet = log
+                  .Split("*** END_MODEL")
+                  .SkipLast(1)
+                  .Select(x => x += "*** END_MODEL")
+                  .ToArray();
+        // Console.Error.WriteLine("CounterSet:" + counterExampleSet.Length);
+        foreach (string ce in counterExampleSet) {
+          // Console.Error.WriteLine("Found a counter example!");
+          var testMethod = new TestMethod(dafnyInfo, ce);
+          if (testMethods.Contains(testMethod)) {
+            continue;
+          }
+          testMethods.Add(testMethod);
+          yield return testMethod;
         }
-        testMethods.Add(testMethod);
-        yield return testMethod;
       }
     }
 

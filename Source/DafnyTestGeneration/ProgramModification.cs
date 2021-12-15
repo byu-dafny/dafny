@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using Microsoft.Boogie;
 using Microsoft.Dafny;
 using Program = Microsoft.Boogie.Program;
+using System.Linq;
+// c# FirstOrDefault;
 
 namespace DafnyTestGeneration {
 
@@ -26,6 +28,18 @@ namespace DafnyTestGeneration {
     /// <summary>
     /// Deep clone the program.
     /// </summary>
+    // private static Program DeepCloneProgram(Program program) {
+    //   var oldPrintInstrumented = DafnyOptions.O.PrintInstrumented;
+    //   var oldPrintFile = DafnyOptions.O.PrintFile;
+    //   DafnyOptions.O.PrintInstrumented = true;
+    //   DafnyOptions.O.PrintFile = "-";
+    //   var textRepresentation = Utils.CaptureConsoleOutput(
+    //     () => program.Emit(new TokenTextWriter(Console.Out)));
+    //   Microsoft.Boogie.Parser.Parse(textRepresentation, "", out var copy);
+    //   DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
+    //   DafnyOptions.O.PrintFile = oldPrintFile;
+    //   return copy;
+    // }
     private static Program DeepCloneProgram(Program program) {
       var oldPrintInstrumented = DafnyOptions.O.PrintInstrumented;
       var oldPrintFile = DafnyOptions.O.PrintFile;
@@ -33,6 +47,12 @@ namespace DafnyTestGeneration {
       DafnyOptions.O.PrintFile = "-";
       var textRepresentation = Utils.CaptureConsoleOutput(
         () => program.Emit(new TokenTextWriter(Console.Out)));
+      // Console.WriteLine("Boogie Output for one modification:\n\n\n");
+      // Console.Write(textRepresentation);
+      // File.WriteAllTextAsync("out.txt", textRepresentation);
+      using StreamWriter file = new("out.bpl", append: true);
+      file.WriteLine("Boogie Output for one modification:\n\n\n");
+      file.Write(textRepresentation);
       Microsoft.Boogie.Parser.Parse(textRepresentation, "", out var copy);
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
       DafnyOptions.O.PrintFile = oldPrintFile;
@@ -63,6 +83,15 @@ namespace DafnyTestGeneration {
       options.TimeLimit = DafnyOptions.O.TimeLimit;
       return options;
     }
+    public override string ToString() {
+      var original = base.ToString() ?? "";
+      var procedureName = procedure ?? "";
+      var implementation = program.Implementations.FirstOrDefault(i => i.Name == procedureName); 
+      var textRepresentation = (implementation != null) ? 
+        Utils.CaptureConsoleOutput(
+          () => implementation.Emit(new TokenTextWriter(Console.Out), 0))
+        : "";
+      return original + "#" + procedureName + " :\n" + textRepresentation;}
 
     /// <summary>
     /// Return the counterexample log produced by trying to verify this modified
