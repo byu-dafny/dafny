@@ -98,7 +98,11 @@ namespace Microsoft.Dafny {
     public void Warning(MessageSource source, IToken tok, string msg) {
       Contract.Requires(tok != null);
       Contract.Requires(msg != null);
-      Message(source, ErrorLevel.Warning, tok, msg);
+      if (DafnyOptions.O.WarningsAsErrors) {
+        Error(source, tok, msg);
+      } else {
+        Message(source, ErrorLevel.Warning, tok, msg);
+      }
     }
 
     public void Deprecated(MessageSource source, IToken tok, string msg, params object[] args) {
@@ -189,7 +193,7 @@ namespace Microsoft.Dafny {
     }
 
     public override bool Message(MessageSource source, ErrorLevel level, IToken tok, string msg) {
-      if (base.Message(source, level, tok, msg) && (DafnyOptions.O != null && DafnyOptions.O.PrintTooltips || level != ErrorLevel.Info)) {
+      if (base.Message(source, level, tok, msg) && ((DafnyOptions.O != null && DafnyOptions.O.PrintTooltips) || level != ErrorLevel.Info)) {
         // Extra indent added to make it easier to distinguish multiline error messages for clients that rely on the CLI
         msg = msg.Replace(Environment.NewLine, Environment.NewLine + " ");
 

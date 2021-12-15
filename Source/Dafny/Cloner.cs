@@ -798,7 +798,7 @@ namespace Microsoft.Dafny {
       BlockStmt body = CloneMethodBody(m);
 
       if (m is Constructor) {
-        return new Constructor(Tok(m.tok), m.Name, tps, ins,
+        return new Constructor(Tok(m.tok), m.Name, m.IsGhost, tps, ins,
           req, mod, ens, decreases, (DividedBlockStmt)body, CloneAttributes(m.Attributes), null);
       } else if (m is LeastLemma) {
         return new LeastLemma(Tok(m.tok), m.Name, m.HasStaticKeyword, ((LeastLemma)m).TypeOfK, tps, ins, m.Outs.ConvertAll(CloneFormal),
@@ -899,8 +899,9 @@ namespace Microsoft.Dafny {
 
       foreach (var top in basem.TopLevelDecls) {
         var import = reverseMap[top] as AliasModuleDecl;
-        if (import == null)
+        if (import == null) {
           continue;
+        }
 
         var def = import.Signature.ModuleDef;
         if (def == null) {
