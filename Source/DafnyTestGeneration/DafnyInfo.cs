@@ -13,10 +13,16 @@ namespace DafnyTestGeneration {
     // import required to access the code contained in the program
     public readonly HashSet<string> ToImport;
 
+    public List<string> Ensures;
+
+    public List<string> Outputs;   
+
     public DafnyInfo(Program program) {
       returnTypes = new Dictionary<string, List<string>>();
       isStatic = new HashSet<string>();
       ToImport = new HashSet<string>();
+      Ensures = new List<string>();
+      Outputs = new List<string>();
       var visitor = new DafnyInfoExtractor(this);
       visitor.Visit(program);
     }
@@ -24,6 +30,10 @@ namespace DafnyTestGeneration {
     public IList<string> GetReturnTypes(string method) {
       return returnTypes[method];
     }
+
+    //   public  string GetEnsures() {
+    //   return Ensures[0].Attributes.Name;
+    // }
 
     public bool IsStatic(string method) {
       return isStatic.Contains(method);
@@ -97,6 +107,16 @@ namespace DafnyTestGeneration {
           info.isStatic.Add(methodName);
         }
         var returnTypes = m.Outs.Select(arg => arg.Type.ToString()).ToList();
+        
+        foreach(Formal output in m.Outs)
+        {
+          info.Outputs.Add(output.Name);
+        }
+
+        foreach(AttributedExpression exp in m.Ens)
+        {
+          info.Ensures.Add(Printer.ExprToString(exp.E));
+        }
         info.returnTypes[methodName] = returnTypes;
       }
     }

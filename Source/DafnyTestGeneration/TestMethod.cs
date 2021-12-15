@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using DafnyServer.CounterexampleGeneration;
+using DafnyServer.CounterExampleGeneration;
 using Microsoft.Boogie;
 
 namespace DafnyTestGeneration {
@@ -31,16 +31,49 @@ namespace DafnyTestGeneration {
     // values of the arguments to be passed to the method call
     public readonly List<string> ArgValues;
 
+    public readonly List<string> variables;
+
     public TestMethod(DafnyInfo dafnyInfo, string log) {
       DafnyInfo = dafnyInfo;
       var typeNames = ExtractPrintedInfo(log, "Types | ");
       var argumentNames = ExtractPrintedInfo(log, "Impl | ");
-      var dafnyModel = DafnyModel.ExtractModel(log);
+      var dafnyModel = ExtractModel(log);
       MethodName = Utils.GetDafnyMethodName(argumentNames.First());
       argumentNames.RemoveAt(0);
       RegisterReservedValues(dafnyModel.Model);
       ArgValues = ExtractInputs(dafnyModel.States.First(), argumentNames, typeNames);
+      variables = ExtractVariables(log);
     }
+
+    private List<string> ExtractVariables(string log){
+      var var_out = new List<string>();
+      
+      const string begin = "*** STATE <initial>";
+      const string end = "*** END_STATE";
+      const string defass_string = "defass";
+      var beginIndex = log.IndexOf(begin, StringComparison.Ordinal);
+      var endIndex = log.IndexOf(end, StringComparison.Ordinal);
+      var var_string = log.Substring(beginIndex, endIndex + end.Length - beginIndex);
+      string[] log_split = var_string.Split("\n");
+
+      bool defass = false;
+      foreach(string s in log_split)
+      {
+          if(defass && !s.Contains(defass_string) && !s.Contains(end) && !s.EndsWith("-> "))
+          {
+            string temp = s.Replace("#0", "");
+            temp = temp.Replace("->", ":=");
+            var_out.Add(temp);     
+          }
+          if(s.Contains(defass_string))
+          {
+            defass = true;
+          }
+      }
+      defass = false;
+      return var_out;
+    }
+
 
     /// <summary>
     /// Extract values that certain elements have at a certain state in the
@@ -314,6 +347,19 @@ namespace DafnyTestGeneration {
       return new List<string>();
     }
 
+    /// <summary>
+    /// Extract and parse the first Dafny model recorded in the log file.
+    /// </summary>
+    private static DafnyModel ExtractModel(string log) {
+      const string begin = "*** MODEL";
+      const string end = "*** END_MODEL";
+      var beginIndex = log.IndexOf(begin, StringComparison.Ordinal);
+      var endIndex = log.IndexOf(end, StringComparison.Ordinal);
+      var modelString = log.Substring(beginIndex, endIndex + end.Length - beginIndex);
+      var model = Model.ParseModels(new StringReader(modelString)).First();
+      return new DafnyModel(model);
+    }
+
     /// <summary>  Return the test method as a list of lines of code </summary>
     private List<string> TestMethodLines() {
 
@@ -359,6 +405,28 @@ namespace DafnyTestGeneration {
       }
 
       lines.Add(returnValues + methodCall);
+
+      // add variables.
+
+      int out_itt = 0;
+      foreach(string outputs in DafnyInfo.Outputs)
+      {
+        lines.Add("var " + outputs + " := r" + out_itt + ";");
+        out_itt += 1;
+      }
+
+      foreach(string vars in variables)
+      {
+        lines.Add("var" + vars + ";");
+      }
+
+      // add oracle
+      foreach(string ens in DafnyInfo.Ensures)
+      {
+        string temp = "assert " + ens + ";";
+        lines.Add(temp);
+      }
+
       lines.Add("}");
 
       return lines;
