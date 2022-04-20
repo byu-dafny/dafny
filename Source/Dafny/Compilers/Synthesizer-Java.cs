@@ -119,7 +119,8 @@ public class JavaSynthesizer {
     // Stub methods and fields according to the Dafny post-conditions:
     foreach (var ensureClause in method.Ens) {
       bounds = new();
-      SynthesizeExpression(wr, ensureClause.E);
+      var wStmts = wr.Fork();
+      SynthesizeExpression(wr, ensureClause.E, wStmts);
     }
 
     // Return the mocked objects:
@@ -149,19 +150,19 @@ public class JavaSynthesizer {
     return new Tuple<IVariable, string>(variable, bounds[variable]);
   }
 
-  private void SynthesizeExpression(ConcreteSyntaxTree wr, Expression expr) {
+  private void SynthesizeExpression(ConcreteSyntaxTree wr, Expression expr, ConcreteSyntaxTree wStmts) {
     switch (expr) {
       case LiteralExpr literalExpr:
-        compiler.TrExpr(literalExpr, wr, false);
+        compiler.TrExpr(literalExpr, wr, false, wStmts);
         break;
       case ApplySuffix applySuffix:
-        SynthesizeExpression(wr, applySuffix);
+        SynthesizeExpression(wr, applySuffix, wStmts);
         break;
       case BinaryExpr binaryExpr:
-        SynthesizeExpression(wr, binaryExpr);
+        SynthesizeExpression(wr, binaryExpr, wStmts);
         break;
       case ForallExpr forallExpr:
-        SynthesizeExpression(wr, forallExpr);
+        SynthesizeExpression(wr, forallExpr, wStmts);
         break;
       case FreshExpr:
         break;
@@ -170,7 +171,7 @@ public class JavaSynthesizer {
     }
   }
 
-  private void SynthesizeExpression(ConcreteSyntaxTree wr, ApplySuffix applySuffix) {
+  private void SynthesizeExpression(ConcreteSyntaxTree wr, ApplySuffix applySuffix, ConcreteSyntaxTree wStmts) {
 
     var methodApp = (ExprDotName)applySuffix.Lhs;
     var receiver = ((IdentifierExpr)methodApp.Lhs.Resolved).Var;
@@ -195,7 +196,7 @@ public class JavaSynthesizer {
       if (bound != null) { // if true, arg is a bound variable
         wr.Write(bound.Item2);
       } else {
-        compiler.TrExpr(arg, wr, false);
+        compiler.TrExpr(arg, wr, false, wStmts);
       }
       if (i != applySuffix.Args.Count - 1) {
         wr.Write(", ");
@@ -204,13 +205,13 @@ public class JavaSynthesizer {
     wr.Write("))");
   }
 
-  private void SynthesizeExpression(ConcreteSyntaxTree wr, BinaryExpr binaryExpr) {
+  private void SynthesizeExpression(ConcreteSyntaxTree wr, BinaryExpr binaryExpr, ConcreteSyntaxTree wStmts) {
     if (binaryExpr.Op == BinaryExpr.Opcode.And) {
       Dictionary<IVariable, string> oldBounds = bounds
         .ToDictionary(entry => entry.Key, entry => entry.Value);
-      SynthesizeExpression(wr, binaryExpr.E0);
+      SynthesizeExpression(wr, binaryExpr.E0, wStmts);
       bounds = oldBounds;
-      SynthesizeExpression(wr, binaryExpr.E1);
+      SynthesizeExpression(wr, binaryExpr.E1, wStmts);
       return;
     }
     if (binaryExpr.Op != BinaryExpr.Opcode.Eq) {
@@ -219,13 +220,13 @@ public class JavaSynthesizer {
     if (binaryExpr.E0 is not ApplySuffix applySuffix) {
       throw new NotImplementedException();
     }
-    SynthesizeExpression(wr, applySuffix);
+    SynthesizeExpression(wr, applySuffix, wStmts);
     wr.Write(".thenReturn(");
-    compiler.TrExpr(binaryExpr.E1, wr, false);
+    compiler.TrExpr(binaryExpr.E1, wr, false, wStmts);
     wr.WriteLine(");");
   }
 
-  private void SynthesizeExpression(ConcreteSyntaxTree wr, ForallExpr forallExpr) {
+  private void SynthesizeExpression(ConcreteSyntaxTree wr, ForallExpr forallExpr, ConcreteSyntaxTree wStmts) {
     if (forallExpr.Term is not BinaryExpr binaryExpr) {
       throw new NotImplementedException();
     }
@@ -236,6 +237,6 @@ public class JavaSynthesizer {
       var varType = compiler.TypeName(boundVar.Type, wr, boundVar.tok);
       bounds[boundVar] = $"org.mockito.Mockito.any({varType}.class)";
     }
-    SynthesizeExpression(wr, binaryExpr);
+    SynthesizeExpression(wr, binaryExpr, wStmts);
   }
 }

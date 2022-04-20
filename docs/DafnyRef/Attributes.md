@@ -345,6 +345,22 @@ an error message is given.
 
 ### 22.1.13. `{:test}`
 The C# and Java compilers can inject test annotations for XUnit and JUnit, respectively.  You must provide the :test attribute for all unit tests you want annotated.
+### 22.1.15. test
+The C# and Java compilers can inject test annotations for XUnit and JUnit, respectively.  You must provide the :test attribute for all unit tests you want annotated.
+
+    method {:test} test_example()
+
+Dafny also provides support for unit tests with parameters provided by a method source.  To invoke this behavior, your tests should be of this form.
+
+    method {:test "MethodSource", "MethodSourceName"} test_example([parameters])
+
+Your method source's signature should be of this form
+
+    static method MethodSourceName() returns (inputs : seq<([parameter-types])>)
+
+where the method is static and the return type is a sequence of tuples.  The types inside each tuple must match the types of your test method's parameters.  The Java compiler will convert the above code into JUnit; the C# compiler will convert it into XUnit.
+
+### 22.1.16. timeLimitMultiplier
 
     method {:test} test_example()
 
@@ -371,6 +387,13 @@ for a function or method, or times the value specified by the
 Boogie `timelimit` command-line option.
 
 ### 22.2.16. `{:verify false}` {#sec-verify}
+### 22.1.17. trigger
+Trigger attributes are used on quantifiers and comprehensions.
+They are translated into Boogie triggers.
+
+### 22.1.18. typeQuantifier
+The `{:typeQuantifier}` attribute must be used on a quantifier if it
+quantifies over types.
      
 Skip verification of a function or a method altogether.
 Will not even try to verify well-formedness of postconditions and preconditions.

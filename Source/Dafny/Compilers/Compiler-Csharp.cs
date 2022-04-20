@@ -1148,6 +1148,11 @@ namespace Microsoft.Dafny.Compilers {
         return csharpSynthesizer.SynthesizeMethod(method, typeArgs, createBody, Writer(method.IsStatic, createBody, method), forBodyInheritance, lookasideBody);
       }
 
+      public ConcreteSyntaxTree CreateFreshMethod(Method m) {
+         throw new NotImplementedException();
+        // return javaSynthesizer.CreateFreshMethod(m, Writer(m.IsStatic, true, m));
+      }
+
       public ConcreteSyntaxTree /*?*/ CreateFunction(string name, List<TypeArgumentInstantiation> typeArgs, List<Formal> formals, Type resultType, Bpl.IToken tok, bool isStatic, bool createBody, MemberDecl member, bool forBodyInheritance, bool lookasideBody) {
         return Compiler.CreateFunction(name, typeArgs, formals, resultType, tok, isStatic, createBody, member, Writer(isStatic, createBody, member), forBodyInheritance, lookasideBody);
       }

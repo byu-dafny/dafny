@@ -31,6 +31,9 @@ namespace Microsoft.Dafny.Compilers {
 
     public override string TargetLanguage => "Java";
     public override string TargetExtension => "java";
+
+    // True if the most recently visited AST has a method annotated with {:synthesize}:
+    protected bool Synthesize = false;
     public override string TargetBasename(string dafnyProgramName) =>
       TransformToClassName(base.TargetBasename(dafnyProgramName));
     public override string TargetBaseDir(string dafnyProgramName) =>
@@ -174,6 +177,22 @@ namespace Microsoft.Dafny.Compilers {
         wr.Write($"{returnedTypes[0]} {collectorVarName} = ");
       }
     }
+
+    /// <summary>
+    /// Return true if the AST contains a method annotated with an attribute
+    /// </summary>
+    private static bool ProgramHasMethodsWithAttr(Program p, String attr) {
+      foreach (var module in p.Modules()) {
+        foreach (ICallable callable in ModuleDefinition.AllCallables(
+                   module.TopLevelDecls)) {
+          if ((callable is Method method) &&
+              Attributes.Contains(method.Attributes, attr)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
     protected override void EmitCastOutParameterSplits(string outCollector, List<string> lhsNames,
       ConcreteSyntaxTree wr, List<Type> formalTypes, List<Type> lhsTypes, Bpl.IToken tok) {
       var wOuts = new List<ConcreteSyntaxTree>();
@@ -314,6 +333,7 @@ namespace Microsoft.Dafny.Compilers {
       wr.WriteLine($"// Dafny program {program.Name} compiled into Java");
       ModuleName = program.MainMethod != null ? "main" : Path.GetFileNameWithoutExtension(program.Name);
       wr.WriteLine();
+      Synthesize = ProgramHasMethodsWithAttr(program, "synthesize");
       // Keep the import writers so that we can import subsequent modules into the main one
       EmitImports(wr, out RootImportWriter);
       wr.WriteLine();
@@ -399,6 +419,7 @@ namespace Microsoft.Dafny.Compilers {
       public readonly ConcreteSyntaxTree InstanceMemberWriter;
       public readonly ConcreteSyntaxTree StaticMemberWriter;
       public readonly ConcreteSyntaxTree CtorBodyWriter;
+      private readonly JavaSynthesizer javaSynthesizer;
 
       public ClassWriter(JavaCompiler compiler, ConcreteSyntaxTree instanceMemberWriter, ConcreteSyntaxTree ctorBodyWriter, ConcreteSyntaxTree staticMemberWriter = null) {
         Contract.Requires(compiler != null);
@@ -407,6 +428,7 @@ namespace Microsoft.Dafny.Compilers {
         this.InstanceMemberWriter = instanceMemberWriter;
         this.CtorBodyWriter = ctorBodyWriter;
         this.StaticMemberWriter = staticMemberWriter ?? instanceMemberWriter;
+        this.javaSynthesizer = new JavaSynthesizer(Compiler, ErrorWriter());
       }
 
       public ConcreteSyntaxTree Writer(bool isStatic, bool createBody, MemberDecl/*?*/ member) {
@@ -422,8 +444,14 @@ namespace Microsoft.Dafny.Compilers {
         return Compiler.CreateMethod(m, typeArgs, createBody, Writer(m.IsStatic, createBody, m), forBodyInheritance, lookasideBody);
       }
 
-      public ConcreteSyntaxTree SynthesizeMethod(Method m, List<TypeArgumentInstantiation> typeArgs, bool createBody, bool forBodyInheritance, bool lookasideBody) {
-        throw new NotImplementedException();
+      public ConcreteSyntaxTree CreateFreshMethod(Method m) {
+        //  throw new NotImplementedException();
+        return javaSynthesizer.CreateFreshMethod(m, Writer(m.IsStatic, true, m));
+      }
+
+      public ConcreteSyntaxTree SynthesizeMethod(Method method, List<TypeArgumentInstantiation> typeArgs, bool createBody, bool forBodyInheritance,
+        bool lookasideBody) {
+        return javaSynthesizer.SynthesizeMethod(method, typeArgs, createBody, Writer(method.IsStatic, createBody, method), forBodyInheritance, lookasideBody);
       }
 
       public ConcreteSyntaxTree/*?*/ CreateFunction(string name, List<TypeArgumentInstantiation> typeArgs, List<Formal> formals, Type resultType, Bpl.IToken tok, bool isStatic, bool createBody, MemberDecl member, bool forBodyInheritance, bool lookasideBody) {
@@ -571,7 +599,7 @@ namespace Microsoft.Dafny.Compilers {
       }
       var customReceiver = createBody && !forBodyInheritance && NeedsCustomReceiver(m);
       var receiverType = UserDefinedType.FromTopLevelDecl(m.tok, m.EnclosingClass);
-      wr.Write("public {0}{1}", !createBody && !(m.EnclosingClass is TraitDecl) ? "abstract " : "", m.IsStatic || customReceiver ? "static " : "");
+      wr.Write("public {0}{1}", !createBody && m.EnclosingClass is not TraitDecl ? "abstract " : "", m.IsStatic || customReceiver ? "static " : "");
       wr.Write(TypeParameters(TypeArgumentInstantiation.ToFormals(ForTypeParameters(typeArgs, m, lookasideBody)), " "));
       wr.Write("{0} {1}", targetReturnTypeReplacement ?? "void", IdName(m));
       wr.Write("(");
@@ -588,6 +616,48 @@ namespace Microsoft.Dafny.Compilers {
       } else {
         return wr.NewBlock(")", null, BlockStyle.NewlineBrace, BlockStyle.NewlineBrace);
       }
+    }
+
+    internal string Keywords(bool isPublic = false, bool isStatic = false, bool isExtern = false) {
+      return (isPublic ? "public " : "") + (isStatic ? "static " : "") + (isExtern ? "extern " : "") + (Synthesize && !isStatic && isPublic ? "virtual " : "");
+    }
+
+    internal ConcreteSyntaxTree GetMethodParameters(Method m, List<TypeArgumentInstantiation> typeArgs, bool lookasideBody, bool customReceiver, string returnType) {
+      //var parameters = GetFunctionParameters(m.Ins, m, typeArgs, lookasideBody, customReceiver);
+      var parameters = new ConcreteSyntaxTree();
+      var sep = "";
+      WriteRuntimeTypeDescriptorsFormals(m, ForTypeDescriptors(typeArgs, m, lookasideBody), parameters, ref sep, tp => $"{DafnyTypeDescriptor}<{tp.CompileName}> {FormatTypeDescriptorVariable(tp)}");
+      if (customReceiver) {
+        var nt = m.EnclosingClass;
+        var receiverType = UserDefinedType.FromTopLevelDecl(m.tok, nt);
+        DeclareFormal(sep, "_this", receiverType, m.tok, true, parameters);
+        sep = ", ";
+      }
+      WriteFormals(sep, m.Ins, parameters);
+      if (returnType == "void") {
+        WriteFormals(parameters.Nodes.Any() ? ", " : "", m.Outs, parameters);
+      }
+      return parameters;
+    }
+
+    internal string GetTargetReturnTypeReplacement(Method m, ConcreteSyntaxTree wr) {
+      string targetReturnTypeReplacement = null;
+      int nonGhostOuts = 0;
+      int nonGhostIndex = 0;
+      for (int i = 0; i < m.Outs.Count; i++) {
+        if (!m.Outs[i].IsGhost) {
+          nonGhostOuts += 1;
+          nonGhostIndex = i;
+        }
+      }
+      if (nonGhostOuts == 1) {
+        targetReturnTypeReplacement = TypeName(m.Outs[nonGhostIndex].Type, wr, m.Outs[nonGhostIndex].tok);
+      } else if (nonGhostOuts > 1) {
+        targetReturnTypeReplacement = DafnyTupleClass(nonGhostOuts);
+      }
+
+      targetReturnTypeReplacement ??= "void";
+      return targetReturnTypeReplacement;
     }
 
     protected override ConcreteSyntaxTree EmitMethodReturns(Method m, ConcreteSyntaxTree wr) {
@@ -664,7 +734,7 @@ namespace Microsoft.Dafny.Compilers {
       wr.WriteLine("@SuppressWarnings({\"unchecked\", \"deprecation\"})");
     }
 
-    string TypeParameters(List<TypeParameter>/*?*/ targs, string suffix = "") {
+    internal string TypeParameters(List<TypeParameter>/*?*/ targs, string suffix = "") {
       Contract.Requires(targs == null || cce.NonNullElements(targs));
       Contract.Ensures(Contract.Result<string>() != null);
 
