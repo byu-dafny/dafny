@@ -445,7 +445,6 @@ namespace Microsoft.Dafny.Compilers {
       }
 
       public ConcreteSyntaxTree CreateFreshMethod(Method m) {
-        //  throw new NotImplementedException();
         return javaSynthesizer.CreateFreshMethod(m, Writer(m.IsStatic, true, m));
       }
 
@@ -577,6 +576,24 @@ namespace Microsoft.Dafny.Compilers {
       }
     }
 
+    private ConcreteSyntaxTree AddExceptionHandlingIfNeeded(Method m, ConcreteSyntaxTree wr) {
+      if (!Attributes.Contains(m.Attributes, "test")) {
+        return wr;
+      }
+
+      var args = Attributes.FindExpressions(m.Attributes, "test");
+      if (args != null && args.Count == 1 && (string)(args[0] as StringLiteralExpr)?.Value == "throws") {
+        if (m.Body != null) {
+          wr = wr.NewBlock($"org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> ");
+          return wr;
+        } else {
+          return wr;
+        }
+      } else {
+        return wr;
+      }
+    }
+
     protected ConcreteSyntaxTree CreateMethod(Method m, List<TypeArgumentInstantiation> typeArgs, bool createBody, ConcreteSyntaxTree wr, bool forBodyInheritance, bool lookasideBody) {
       if (m.IsExtern(out _, out _) && (m.IsStatic || m is Constructor)) {
         // No need for an abstract version of a static method or a constructor
@@ -614,6 +631,7 @@ namespace Microsoft.Dafny.Compilers {
         wr.WriteLine(");");
         return null; // We do not want to write a function body, so instead of returning a BTW, we return null.
       } else {
+        // wr = AddExceptionHandlingIfNeeded(m, wr);
         return wr.NewBlock(")", null, BlockStyle.NewlineBrace, BlockStyle.NewlineBrace);
       }
     }

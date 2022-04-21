@@ -2329,12 +2329,31 @@ namespace Microsoft.Dafny.Compilers {
       }
     }
 
+    private ConcreteSyntaxTree AddExceptionHandlingIfNeeded(Method m, ConcreteSyntaxTree wr) {
+      if (!Attributes.Contains(m.Attributes, "test")) {
+        return wr;
+      }
+
+      var args = Attributes.FindExpressions(m.Attributes, "test");
+      if (args != null && args.Count == 1 && (string)(args[0] as StringLiteralExpr)?.Value == "throws") {
+        if (m.Body != null) {
+          wr = wr.NewBlock($"org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> ", ");");
+          return wr;
+        } else {
+          return wr;
+        }
+      } else {
+        return wr;
+      }
+    }
+
     private void CompileMethod(Program program, Method m, IClassWriter cw, bool lookasideBody) {
       Contract.Requires(cw != null);
       Contract.Requires(m != null);
       Contract.Requires(m.Body != null || Attributes.Contains(m.Attributes, "dllimport") || (IncludeExternMembers && Attributes.Contains(m.Attributes, "extern")));
 
       var w = cw.CreateMethod(m, CombineAllTypeArguments(m), !m.IsExtern(out _, out _), false, lookasideBody);
+      w = AddExceptionHandlingIfNeeded(m, w);
       if (w != null) {
         if (m.IsTailRecursive) {
           w = EmitTailCallStructure(m, w);

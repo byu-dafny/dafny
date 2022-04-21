@@ -48,7 +48,6 @@ public class JavaSynthesizer {
     var returnType = compiler.GetTargetReturnTypeReplacement(m, wr);
     wr = wr.NewBlock($"{keywords}{returnType} {m.CompileName}()");
     wr.FormatLine($"return new {returnType}();"); // TODO: make sure this is correct java
-    // wr.WriteLine("}");
     return wr;
   }
 
