@@ -82,6 +82,7 @@ namespace DafnyTestGeneration {
     private Vertex graph = null;
     private Vertex returnVertex = null;
     private List<Path> paths = new();
+    private int totalBranchesHit = 0;
 
     private ProgramModification GenerateModifcation(Program p, Path path) {
         ProgramModification result;
@@ -92,7 +93,10 @@ namespace DafnyTestGeneration {
     }
 
     private bool PathIsFeasible(ProgramModification pm) {
-        if(pm.GetCounterExampleLog() == null) {
+      var task = pm.GetCounterExampleLog();
+      task.Wait();
+      var log = task.Result;
+        if(log == null || log == "") {
           return false;
         }
         else {
@@ -109,7 +113,29 @@ namespace DafnyTestGeneration {
         System.Console.WriteLine("//" + path);
         result.Add(GenerateModifcation(p, path));
       }
+      System.Console.WriteLine("//TOTAL BRANCHES HIT: " + totalBranchesHit);
       return result;
+    }
+
+    public void GetTotalBranchNum(Implementation node) {
+      int totalBranchNum = 0;
+      foreach (var block in node.Blocks) {
+        if (block.Label.Contains("Then") || block.Label.Contains("Else")) {
+          totalBranchNum++;
+        }
+      }
+      System.Console.WriteLine("//TOTAL BRANCHES: " + totalBranchNum);
+    }
+
+    public void ReportHitBranches(HashSet<string> labels) {
+      int branchesHit = 0;
+      foreach (var l in labels) {
+        if (l.Contains("Then") || l.Contains("Else")) {
+          branchesHit++;
+        }
+      }
+      System.Console.WriteLine("//A test hits " + branchesHit + " branches");
+      totalBranchesHit += branchesHit;
     }
 
     /// <summary>
@@ -121,6 +147,7 @@ namespace DafnyTestGeneration {
         return node;
       }
       InitBlockVars(node);
+      GetTotalBranchNum(node);
       var blockNameToId = GetIdToBlock(node);
       var blockToVertex = new Dictionary<int, Vertex>();
       System.Console.WriteLine("//GENERATING GRAPH");
@@ -134,7 +161,8 @@ namespace DafnyTestGeneration {
         node.Blocks[0],
         null,
         new HashSet<int>(),
-        new List<int>());
+        new List<int>(),
+        new HashSet<string>());
       return node;
     }
 
@@ -229,7 +257,7 @@ namespace DafnyTestGeneration {
     /// <param name="currList">the blocks forming the path</param>
     private bool GeneratePaths(Implementation impl,
       Dictionary<string, Block> idToBlock, Dictionary<int, Vertex> blockToVertex, Block block, Edge pred,
-      HashSet<int> currSet, List<int> currList) {
+      HashSet<int> currSet, List<int> currList, HashSet<string> currLabelSet) {
       if (currSet.Contains(block.UniqueId)) {
         //System.Console.Write("Allready Visited:");
         //System.Console.WriteLine(block.UniqueId);
@@ -256,11 +284,13 @@ namespace DafnyTestGeneration {
         Path newPath = new Path(impl, currList, block);
         if (PathIsFeasible(GenerateModifcation(program, newPath))) {
           System.Console.WriteLine("//Found a new FEASIBLE PATH");
+          ReportHitBranches(currLabelSet);
           paths.Add(newPath);
           return true;
         }
         else {
           System.Console.WriteLine("//PATH WAS INFEASIBLE");
+          //System.Console.WriteLine("Here's the infeasible path: " + newPath.ToString());
           return false;
         }
         //TODO FIND HOW TO GET Program p here so I can check if it is feaisble.
@@ -269,6 +299,7 @@ namespace DafnyTestGeneration {
       // otherwise, each goto statement presents a new path to take:
       currSet.Add(block.UniqueId);
       currList.Add(block.UniqueId);
+      currLabelSet.Add(block.Label);
       var gotoCmd = block.TransferCmd as GotoCmd;
       bool hasFeasiblePath = false;
       foreach (var b in gotoCmd?.labelNames ?? new List<string>()) {
@@ -284,7 +315,7 @@ namespace DafnyTestGeneration {
         if (edge.visited) {
           continue;
         }
-        bool pathIsFeasible = GeneratePaths(impl, idToBlock, blockToVertex, idToBlock[b], edge, currSet, currList);
+        bool pathIsFeasible = GeneratePaths(impl, idToBlock, blockToVertex, idToBlock[b], edge, currSet, currList, currLabelSet);
         if (pathIsFeasible) {
           hasFeasiblePath = true;
         }
@@ -310,6 +341,7 @@ namespace DafnyTestGeneration {
       }
       currList.RemoveAt(currList.Count - 1);
       currSet.Remove(block.UniqueId);
+      currLabelSet.Remove(block.Label);
       return hasFeasiblePath;
     }
 
