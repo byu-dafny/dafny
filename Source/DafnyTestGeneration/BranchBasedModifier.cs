@@ -110,7 +110,7 @@ namespace DafnyTestGeneration {
       var result = new List<ProgramModification>();
       p = VisitProgram(p); // populates paths
       foreach (var path in paths) {
-        System.Console.WriteLine(path);
+        System.Console.WriteLine("//" + path);
         result.Add(GenerateModifcation(p, path));
       }
       System.Console.WriteLine("//TOTAL BRANCHES HIT: " + totalBranchesHit);
@@ -150,11 +150,11 @@ namespace DafnyTestGeneration {
       GetTotalBranchNum(node);
       var blockNameToId = GetIdToBlock(node);
       var blockToVertex = new Dictionary<int, Vertex>();
-      System.Console.WriteLine("GENERATING GRAPH");
+      System.Console.WriteLine("//GENERATING GRAPH");
       GenerateGraph(node, blockNameToId, blockToVertex , node.Blocks[0], null);
-      System.Console.WriteLine("GENERATING DOT");
+      System.Console.WriteLine("//GENERATING DOT");
       graph.GenerateDotFile();
-      System.Console.WriteLine("GENERATING PATHS");
+      System.Console.WriteLine("//GENERATING PATHS");
       GeneratePaths(node,
         blockNameToId,
         blockToVertex,

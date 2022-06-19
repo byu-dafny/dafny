@@ -60,6 +60,7 @@ namespace Microsoft.Dafny {
       return false;
     }
 
+
     public string Help => @"
 /generateTestMode:<None|Block|Branch|Path>
     None is the default and has no effect.
