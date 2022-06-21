@@ -239,7 +239,7 @@ namespace DafnyTestGeneration {
             $"{returnParNames[i]}:{DafnyInfo.GetReturnTypes(MethodName)[i]}"));
       var modifiesClause = string.Join("",
         ObjectsToMock.Select(i => $" modifies {i.id}"));
-      lines.Add($"method test{id}({parameters}) " +
+      lines.Add($"method {{:test}} test{id}({parameters}) " +
                 $"returns ({returnsDeclaration}) {modifiesClause} {{");
 
       // assignments necessary to set up the test case:
