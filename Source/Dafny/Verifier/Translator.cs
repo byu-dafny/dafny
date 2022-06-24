@@ -1629,6 +1629,7 @@ namespace Microsoft.Dafny {
 
       var name = MethodName(iter, kind);
       var proc = new Bpl.Procedure(iter.tok, name, new List<Bpl.TypeVariable>(), inParams, outParams, req, mod, ens, etran.TrAttributes(iter.Attributes, null));
+      AddVerboseName(proc, iter.FullDafnyName, kind);
 
       currentModule = null;
       codeContext = null;
@@ -1764,6 +1765,7 @@ namespace Microsoft.Dafny {
         Bpl.Implementation impl = new Bpl.Implementation(iter.tok, proc.Name,
           new List<Bpl.TypeVariable>(), inParams, new List<Variable>(),
           localVariables, stmts, kv);
+        CopyVerboseName(impl, proc);
         sink.AddTopLevelDeclaration(impl);
       }
 
@@ -1838,6 +1840,7 @@ namespace Microsoft.Dafny {
         Bpl.Implementation impl = new Bpl.Implementation(iter.tok, proc.Name,
           new List<Bpl.TypeVariable>(), inParams, new List<Variable>(),
           localVariables, stmts, kv);
+        CopyVerboseName(impl, proc);
         sink.AddTopLevelDeclaration(impl);
       }
 
@@ -4195,6 +4198,7 @@ namespace Microsoft.Dafny {
       var proc = new Bpl.Procedure(f.tok, "CheckWellformed" + NameSeparator + f.FullSanitizedName, new List<Bpl.TypeVariable>(),
         Concat(Concat(typeInParams, inParams_Heap), inParams), outParams,
         req, mod, ens, etran.TrAttributes(f.Attributes, null));
+      AddVerboseName(proc, f.FullDafnyName, MethodTranslationKind.SpecWellformedness);
       sink.AddTopLevelDeclaration(proc);
 
       if (InsertChecksums) {
@@ -4365,6 +4369,7 @@ namespace Microsoft.Dafny {
           Concat(Concat(Bpl.Formal.StripWhereClauses(typeInParams), inParams_Heap), implInParams),
           implOutParams,
           locals, implBody, kv);
+        CopyVerboseName(impl, proc);
         sink.AddTopLevelDeclaration(impl);
         if (InsertChecksums) {
           InsertChecksum(f, impl);
@@ -4415,9 +4420,12 @@ namespace Microsoft.Dafny {
         (Bpl.IdentifierExpr /*TODO: this cast is rather dubious*/)etran.HeapExpr,
         etran.Tick()
       };
-      var proc = new Bpl.Procedure(decl.tok, "CheckWellformed" + NameSeparator + decl.FullSanitizedName, new List<Bpl.TypeVariable>(),
+      var name = MethodName(decl, MethodTranslationKind.SpecWellformedness);
+      var proc = new Bpl.Procedure(decl.tok, name, new List<Bpl.TypeVariable>(),
         inParams, new List<Variable>(),
         req, mod, new List<Bpl.Ensures>(), etran.TrAttributes(decl.Attributes, null));
+      // TODO: is decl.Name the right thing below?
+      AddVerboseName(proc, decl.Name, MethodTranslationKind.SpecWellformedness);
       sink.AddTopLevelDeclaration(proc);
 
       // TODO: Can a checksum be inserted here?
@@ -4516,6 +4524,7 @@ namespace Microsoft.Dafny {
         var impl = new Bpl.Implementation(decl.tok, proc.Name,
           new List<Bpl.TypeVariable>(), implInParams, new List<Variable>(),
           locals, implBody, kv);
+        CopyVerboseName(impl, proc);
         sink.AddTopLevelDeclaration(impl);
       }
 
@@ -4569,9 +4578,11 @@ namespace Microsoft.Dafny {
       req.Add(Requires(decl.tok, true, etran.HeightContext(decl), null, null));
       var heapVar = new Bpl.IdentifierExpr(decl.tok, "$Heap", false);
       var varlist = new List<Bpl.IdentifierExpr> { heapVar, etran.Tick() };
-      var proc = new Bpl.Procedure(decl.tok, "CheckWellformed" + NameSeparator + decl.FullSanitizedName, new List<Bpl.TypeVariable>(),
+      var name = MethodName(decl, MethodTranslationKind.SpecWellformedness);
+      var proc = new Bpl.Procedure(decl.tok, name, new List<Bpl.TypeVariable>(),
         inParams, new List<Variable>(),
         req, varlist, new List<Bpl.Ensures>(), etran.TrAttributes(decl.Attributes, null));
+      AddVerboseName(proc, decl.FullDafnyName, MethodTranslationKind.SpecWellformedness);
       sink.AddTopLevelDeclaration(proc);
 
       var implInParams = Bpl.Formal.StripWhereClauses(inParams);
@@ -4595,6 +4606,7 @@ namespace Microsoft.Dafny {
         var impl = new Bpl.Implementation(decl.tok, proc.Name,
           new List<Bpl.TypeVariable>(), implInParams, new List<Variable>(),
           locals, implBody, kv);
+        CopyVerboseName(impl, proc);
         sink.AddTopLevelDeclaration(impl);
       }
 
@@ -4643,6 +4655,7 @@ namespace Microsoft.Dafny {
       var proc = new Bpl.Procedure(ctor.tok, "CheckWellformed" + NameSeparator + ctor.FullName, new List<Bpl.TypeVariable>(),
         inParams, new List<Variable>(),
         req, varlist, new List<Bpl.Ensures>(), etran.TrAttributes(ctor.Attributes, null));
+      AddVerboseName(proc, ctor.FullName, MethodTranslationKind.SpecWellformedness);
       sink.AddTopLevelDeclaration(proc);
 
       var implInParams = Bpl.Formal.StripWhereClauses(inParams);
@@ -4669,6 +4682,7 @@ namespace Microsoft.Dafny {
         var impl = new Bpl.Implementation(ctor.tok, proc.Name,
           new List<Bpl.TypeVariable>(), implInParams, new List<Variable>(),
           locals, implBody, kv);
+        CopyVerboseName(impl, proc);
         sink.AddTopLevelDeclaration(impl);
       }
 
@@ -6857,7 +6871,7 @@ namespace Microsoft.Dafny {
         functionHandles[f] = name;
         var args = new List<Bpl.Expr>();
         var vars = MkTyParamBinders(GetTypeParams(f), out args);
-        var formals = MkTyParamFormals(GetTypeParams(f), false);
+        var formals = MkTyParamFormals(GetTypeParams(f), false, false);
         var tyargs = new List<Bpl.Expr>();
         foreach (var fm in f.Formals) {
           tyargs.Add(TypeToTy(fm.Type));
@@ -7922,6 +7936,34 @@ namespace Microsoft.Dafny {
           Contract.Assert(false);  // unexpected kind
           throw new cce.UnreachableException();
       }
+    }
+
+    static string MethodVerboseName(string fullName, MethodTranslationKind kind) {
+      Contract.Requires(fullName != null);
+      switch (kind) {
+        case MethodTranslationKind.SpecWellformedness:
+          return fullName + " (well-formedness)";
+        case MethodTranslationKind.Call:
+          return fullName + " (call)";
+        case MethodTranslationKind.CoCall:
+          return fullName + " (co-call)";
+        case MethodTranslationKind.Implementation:
+          return fullName + " (implementation correctness)";
+        case MethodTranslationKind.OverrideCheck:
+          return fullName + " (override check)";
+        default:
+          Contract.Assert(false);  // unexpected kind
+          throw new cce.UnreachableException();
+      }
+    }
+
+    private static void AddVerboseName(Bpl.NamedDeclaration boogieDecl, string dafnyName, MethodTranslationKind kind) {
+      var name = MethodVerboseName(dafnyName, kind);
+      boogieDecl.AddAttribute("verboseName", new object[] { name });
+    }
+
+    private static void CopyVerboseName(Bpl.NamedDeclaration targetDecl, Bpl.NamedDeclaration sourceDecl) {
+      targetDecl.AddAttribute("verboseName", new object[] { sourceDecl.VerboseName });
     }
 
     private static CallCmd Call(IToken tok, string methodName, List<Expr> ins, List<Bpl.IdentifierExpr> outs) {

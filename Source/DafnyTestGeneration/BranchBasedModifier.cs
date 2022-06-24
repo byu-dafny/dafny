@@ -87,7 +87,8 @@ namespace DafnyTestGeneration {
     private ProgramModification GenerateModifcation(Program p, Path path) {
         ProgramModification result;
         path.AssertPath();
-        result = new ProgramModification(p, ProcedureName ?? path.Impl.Name);
+        result = new ProgramModification(p, 
+          ImplementationToTarget?.VerboseName ?? path.Impl.VerboseName);
         path.NoAssertPath();
         return result;
     }
@@ -143,7 +144,7 @@ namespace DafnyTestGeneration {
     /// and then populate the paths field.
     /// </summary>
     public override Implementation VisitImplementation(Implementation node) {
-      if (!ProcedureIsToBeTested(node.Name)) {
+      if (!ImplementationIsToBeTested(node)) {
         return node;
       }
       InitBlockVars(node);

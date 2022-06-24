@@ -555,9 +555,9 @@ namespace Microsoft.Dafny.Compilers {
       wr.WriteLine("@org.junit.jupiter.params.provider.MethodSource(\"_" + methodName + "\")");
     }
 
-    private void AddTestCheckerIfNeeded(Declaration decl, ConcreteSyntaxTree wr) {
+    private bool AddTestCheckerIfNeeded(Declaration decl, ConcreteSyntaxTree wr) {
       if (!Attributes.Contains(decl.Attributes, "test")) {
-        return;
+        return false;
       }
       var args = Attributes.FindExpressions(decl.Attributes, "test");
       if (args.Count == 2 && args[0] is LiteralExpr && args[1] is LiteralExpr) {
@@ -568,12 +568,11 @@ namespace Microsoft.Dafny.Compilers {
           string dafnyStructure = WriteDafnyStructure(m, wr);
           string compiledSourceName = NonglobalVariable.SanitizeName(methodNameExpr.Value.ToString());
           WriteGlueCode(wr, compiledSourceName, dafnyStructure, m.Ins.Count);
-          return;
         }
       } else {
         wr.WriteLine("@org.junit.jupiter.api.Test");
-        return;
       }
+      return true;
     }
 
     private ConcreteSyntaxTree AddExceptionHandlingIfNeeded(Method m, ConcreteSyntaxTree wr) {
@@ -599,7 +598,7 @@ namespace Microsoft.Dafny.Compilers {
         // No need for an abstract version of a static method or a constructor
         return null;
       }
-      AddTestCheckerIfNeeded(m, wr);
+      bool hasTestAttr = AddTestCheckerIfNeeded(m, wr);
       string targetReturnTypeReplacement = null;
       int nonGhostOuts = 0;
       int nonGhostIndex = 0;
@@ -616,7 +615,7 @@ namespace Microsoft.Dafny.Compilers {
       }
       var customReceiver = createBody && !forBodyInheritance && NeedsCustomReceiver(m);
       var receiverType = UserDefinedType.FromTopLevelDecl(m.tok, m.EnclosingClass);
-      wr.Write("public {0}{1}", !createBody && m.EnclosingClass is not TraitDecl ? "abstract " : "", m.IsStatic || customReceiver ? "static " : "");
+      wr.Write("public {0}{1}", !createBody && m.EnclosingClass is not TraitDecl ? "abstract " : "", (m.IsStatic || customReceiver) && !hasTestAttr ? "static " : "");
       wr.Write(TypeParameters(TypeArgumentInstantiation.ToFormals(ForTypeParameters(typeArgs, m, lookasideBody)), " "));
       wr.Write("{0} {1}", targetReturnTypeReplacement ?? "void", IdName(m));
       wr.Write("(");
@@ -703,10 +702,10 @@ namespace Microsoft.Dafny.Compilers {
         // No need for abstract version of static method
         return null;
       }
-      AddTestCheckerIfNeeded(member, wr);
+      bool hasTestAttr = AddTestCheckerIfNeeded(member, wr);
       var customReceiver = createBody && !forBodyInheritance && NeedsCustomReceiver(member);
       var receiverType = UserDefinedType.FromTopLevelDecl(member.tok, member.EnclosingClass);
-      wr.Write("public {0}{1}", !createBody && !(member.EnclosingClass is TraitDecl) ? "abstract " : "", isStatic || customReceiver ? "static " : "");
+      wr.Write("public {0}{1}", !createBody && !(member.EnclosingClass is TraitDecl) ? "abstract " : "", (isStatic || customReceiver) && !hasTestAttr ? "static " : "");
       wr.Write(TypeParameters(TypeArgumentInstantiation.ToFormals(ForTypeParameters(typeArgs, member, lookasideBody)), " "));
       wr.Write($"{TypeName(resultType, wr, tok)} {name}(");
       var sep = "";
