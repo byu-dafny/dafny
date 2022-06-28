@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Dafny;
@@ -8,6 +10,7 @@ using IdentifierExpr = Microsoft.Boogie.IdentifierExpr;
 using LocalVariable = Microsoft.Boogie.LocalVariable;
 using Parser = Microsoft.Boogie.Parser;
 using Program = Microsoft.Boogie.Program;
+using QuantifierExpr = Microsoft.Boogie.QuantifierExpr;
 using Type = Microsoft.Boogie.Type;
 
 namespace DafnyTestGeneration {
@@ -32,10 +35,25 @@ namespace DafnyTestGeneration {
     /// </summary>
     public IEnumerable<ProgramModification> GetModifications(IEnumerable<Program> programs, DafnyInfo dafnyInfo) {
       this.dafnyInfo = dafnyInfo;
+      if (DafnyOptions.O.TestGenOptions.Verbose) {
+        Console.WriteLine("// Merging boogie files...");
+      }
       var program = MergeBoogiePrograms(programs);
+      if (DafnyOptions.O.TestGenOptions.Verbose) {
+        Console.WriteLine("// Converting function calls to method calls...");
+      }
       program = new FunctionToMethodCallRewriter(this).VisitProgram(program);
+      if (DafnyOptions.O.TestGenOptions.Verbose) {
+        Console.WriteLine("// Adding Impl$$ methods to support inlining...");
+      }
       program = new AddImplementationsForCalls().VisitProgram(program);
+      if (DafnyOptions.O.TestGenOptions.Verbose) {
+        Console.WriteLine("// Removing assertions...");
+      }
       program = new RemoveChecks().VisitProgram(program);
+      if (DafnyOptions.O.TestGenOptions.Verbose) {
+        Console.WriteLine("// Annotating blocks...");
+      }
       var annotator = new AnnotationVisitor();
       program = annotator.VisitProgram(program);
       ImplementationToTarget = annotator.ImplementationToTarget;
@@ -43,7 +61,26 @@ namespace DafnyTestGeneration {
       callGraphVisitor.VisitProgram(program);
       toModify = callGraphVisitor.GetCallees(ImplementationToTarget?.Name);
       AddAxioms(program);
+      if (DafnyOptions.O.TestGenOptions.PrintBpl != null) {
+        File.WriteAllText(DafnyOptions.O.TestGenOptions.PrintBpl, 
+          GetStringRepresentation(program));
+      }
+      if (DafnyOptions.O.TestGenOptions.Verbose) {
+        Console.WriteLine("// Generating modifications...");
+      }
       return GetModifications(program);
+    }
+
+    private static string GetStringRepresentation(Program program) {
+      var oldPrintInstrumented = DafnyOptions.O.PrintInstrumented;
+      var oldPrintFile = DafnyOptions.O.PrintFile;
+      DafnyOptions.O.PrintInstrumented = true;
+      DafnyOptions.O.PrintFile = "-";
+      var output = new StringWriter();
+      program.Emit(new TokenTextWriter(output, DafnyOptions.O));
+      DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
+      DafnyOptions.O.PrintFile = oldPrintFile;
+      return output.ToString();
     }
 
     protected abstract IEnumerable<ProgramModification> GetModifications(Program p);
@@ -62,6 +99,11 @@ namespace DafnyTestGeneration {
         var limit = (uint)DafnyOptions.O.TestGenOptions.SeqLengthLimit;
         axiom = GetAxiom($"axiom (forall<T> y: Seq T :: " +
                          $"{{ Seq#Length(y) }} Seq#Length(y) <= {limit});");
+        program.AddTopLevelDeclaration(axiom);
+        //TODO: have a parameter that turns this off?
+        axiom = GetAxiom($"axiom (forall x: int :: " +
+                         $"x <= {int.MaxValue} && " +
+                         $"x >= {int.MinValue});");
         program.AddTopLevelDeclaration(axiom);
       }
     }
@@ -402,6 +444,10 @@ namespace DafnyTestGeneration {
         var identifierExpr = TryConvertFunctionCall(funcCall);
         return identifierExpr ?? newNode;
       }
+      
+      public override QuantifierExpr VisitQuantifierExpr(QuantifierExpr node) {
+        return node;
+      }
 
       public override Cmd VisitAssignCmd(AssignCmd node) {
         currAssignCmd = node;
@@ -506,6 +552,10 @@ namespace DafnyTestGeneration {
           funcCallToResult[functionCallToString]);
       }
 
+      public override QuantifierExpr VisitQuantifierExpr(QuantifierExpr node) {
+        return node;
+      }
+      
       public override Cmd VisitAssignCmd(AssignCmd node) {
         currAssignCmd = node;
         node = (AssignCmd)base.VisitAssignCmd(node);

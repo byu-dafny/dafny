@@ -87,8 +87,9 @@ namespace DafnyTestGeneration {
     private ProgramModification GenerateModifcation(Program p, Path path) {
         ProgramModification result;
         path.AssertPath();
-        result = new ProgramModification(p, 
-          ImplementationToTarget?.VerboseName ?? path.Impl.VerboseName);
+        var name = ImplementationToTarget?.VerboseName ?? path.Impl.VerboseName;
+        result = new ProgramModification(p, name,
+          $"{name.Split(" ")[0]}(path through{string.Join(",", path)})" );
         path.NoAssertPath();
         return result;
     }

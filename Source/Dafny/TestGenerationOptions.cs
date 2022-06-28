@@ -14,6 +14,8 @@ namespace Microsoft.Dafny {
     public uint TestInlineDepth = 0;
     public string PrintBoogieFile = null;
     public uint Timeout = 100;
+    public bool Verbose = false;
+    [CanBeNull] public string PrintBpl = null;
 
     public bool ParseOption(string name, Bpl.CommandLineParseState ps) {
       var args = ps.args;
@@ -63,6 +65,16 @@ namespace Microsoft.Dafny {
             Timeout = (uint)timeout;
           }
           return true;
+        
+        case "generateTestPrintBpl":
+          if (ps.ConfirmArgumentCount(1)) {
+            PrintBpl = args[ps.i];
+          }
+          return true;
+        
+        case "generateTestVerbose":
+          Verbose = true;
+          return true;
       }
 
       return false;
@@ -88,7 +100,13 @@ namespace Microsoft.Dafny {
 /generateTestInlineDepth:<n>
     0 is the default. When used in conjunction with /testTargetMethod, this
     argument specifies the depth up to which all non-tested methods should be
-    inlined.";
+    inlined.
+/generateTestTimeout:<n>
+    Timeout generation of a test for a particular block/path after n seconds
+/generateTestPrintBpl:<fileName>
+    Print the Boogie code after all transformations to a specified file
+/generateTestVerbose
+    Print various info as comments for debugging";
 
   }
 }
