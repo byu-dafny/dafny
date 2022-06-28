@@ -67,7 +67,7 @@ namespace DafnyTestGeneration {
     /// Merge Boogie Programs by removing any duplicate top level declarations
     /// (these typically come from DafnyPrelude.bpl)
     /// </summary>
-    private static Program MergeBoogiePrograms(IEnumerable<Program> programs) {
+    public static Program MergeBoogiePrograms(IEnumerable<Program> programs) {
       // Merge all programs into one first:
       var program = new Program();
       foreach (var p in programs) {

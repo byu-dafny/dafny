@@ -7,6 +7,7 @@ namespace Microsoft.Dafny {
   public class TestGenerationOptions {
 
     public bool WarnDeadCode = false;
+    public bool PruneFailedTests = false;
     public enum Modes { None, Block, Path };
     public Modes Mode = Modes.None;
     [CanBeNull] public string TargetMethod = null;
@@ -53,6 +54,10 @@ namespace Microsoft.Dafny {
             TestInlineDepth = (uint)depth;
           }
           return true;
+
+        case "pruneFailed":
+          PruneFailedTests = true;
+          return true;
       }
 
       return false;
@@ -76,7 +81,9 @@ namespace Microsoft.Dafny {
 /generateTestInlineDepth:<n>
     0 is the default. When used in conjunction with /testTargetMethod, this
     argument specifies the depth up to which all non-tested methods should be
-    inlined.";
+    inlined.
+/pruneFailed
+    verify generated tests and remove any that flag a verification error";
 
   }
 }
