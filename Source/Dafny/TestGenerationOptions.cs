@@ -55,7 +55,7 @@ namespace Microsoft.Dafny {
           }
           return true;
 
-        case "pruneFailed":
+        case "generateTestPruneFailed":
           PruneFailedTests = true;
           return true;
       }

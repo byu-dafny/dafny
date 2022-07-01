@@ -136,7 +136,7 @@ namespace DafnyTestGeneration {
         if (DafnyOptions.O.TestGenOptions.PruneFailedTests) {
           string testClassPrelude = GetTestClassPrelude(sourceFile, dafnyInfo).Aggregate("", (x, y) => x = x + y + '\n');
           string testClassWithSingleMethod = testClassPrelude + methodStr + "\n}";
-          Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod);
+          Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod, Path.GetFileName(sourceFile));
 
           if (dafnyProgram != null) {
             var engine = Microsoft.Boogie.ExecutionEngine.CreateWithoutSharedCache(DafnyOptions.O);
