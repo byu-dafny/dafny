@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Dafny;
+
 using Program = Microsoft.Dafny.Program;
 
 namespace DafnyTestGeneration {
@@ -116,6 +117,36 @@ namespace DafnyTestGeneration {
         }
     }
 
+    private static async Task<string> RetMethodIfVerified(string sourceFile, DafnyInfo dafnyInfo, string methodStr) {
+      string testClassPrelude = GetTestClassPrelude(sourceFile, dafnyInfo).Aggregate("", (x, y) => x = x + y + '\n');
+      string testClassWithSingleMethod = testClassPrelude + methodStr 
+        + TestMethod.EmitSynthesizeMethods() + "\n}";
+      Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod, Path.GetFileName(sourceFile));
+
+      if (dafnyProgram != null) {
+        var engine = Microsoft.Boogie.ExecutionEngine.CreateWithoutSharedCache(DafnyOptions.O);
+        var boogiePrograms = Translator.Translate(dafnyProgram, dafnyProgram.Reporter).ToList().ConvertAll(tuple => tuple.Item2);
+        var boogieProgram = ProgramModifier.MergeBoogiePrograms(boogiePrograms);
+        var writer = new StringWriter();
+        var uniqueId = System.Guid.NewGuid().ToString();
+
+        Task<(Microsoft.Boogie.PipelineOutcome, Microsoft.Boogie.PipelineStatistics)> 
+          boogieTask = Microsoft.Dafny.Main.BoogieOnce(writer, engine, "", "", boogieProgram, uniqueId);
+
+        var task = await Task.WhenAny(
+          boogieTask,
+          Task.Delay(System.TimeSpan.FromSeconds(DafnyOptions.O.TestGenOptions.Timeout)));
+
+        if (task == boogieTask) {
+          var (outcome, stats) = await boogieTask;
+
+          if (Microsoft.Dafny.Main.IsBoogieVerified(outcome, stats)) 
+            return methodStr;
+        }
+      }
+      return "";
+    }
+
     /// <summary>
     /// Return a Dafny class (list of lines) with tests for the given Dafny file
     /// </summary>
@@ -135,23 +166,7 @@ namespace DafnyTestGeneration {
       await foreach (var method in GetTestMethodsForProgram(program, dafnyInfo)) {
         string methodStr = method.ToString();
         if (DafnyOptions.O.TestGenOptions.PruneFailedTests) {
-          string testClassPrelude = GetTestClassPrelude(sourceFile, dafnyInfo).Aggregate("", (x, y) => x = x + y + '\n');
-          string testClassWithSingleMethod = testClassPrelude + methodStr 
-            + TestMethod.EmitSynthesizeMethods() + "\n}";
-          Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod, Path.GetFileName(sourceFile));
-
-          if (dafnyProgram != null) {
-            var engine = Microsoft.Boogie.ExecutionEngine.CreateWithoutSharedCache(DafnyOptions.O);
-            var boogiePrograms = Translator.Translate(dafnyProgram, dafnyProgram.Reporter).ToList().ConvertAll(tuple => tuple.Item2);
-            var boogieProgram = ProgramModifier.MergeBoogiePrograms(boogiePrograms);
-            var writer = new StringWriter();
-            var uniqueId = System.Guid.NewGuid().ToString();
-    
-            var (outcome, stats) = await Microsoft.Dafny.Main.BoogieOnce(writer, engine, "", "", boogieProgram, uniqueId);
-
-            if (Microsoft.Dafny.Main.IsBoogieVerified(outcome, stats)) 
-              yield return methodStr;
-          }
+          yield return await RetMethodIfVerified(sourceFile, dafnyInfo, methodStr);
         } else {
           yield return methodStr;
         }

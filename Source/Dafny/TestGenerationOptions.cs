@@ -13,6 +13,7 @@ namespace Microsoft.Dafny {
     [CanBeNull] public string TargetMethod = null;
     public uint? SeqLengthLimit = null;
     public uint TestInlineDepth = 0;
+    public uint Timeout = 100;
 
     public bool ParseOption(string name, Bpl.CommandLineParseState ps) {
       var args = ps.args;
@@ -55,6 +56,13 @@ namespace Microsoft.Dafny {
           }
           return true;
 
+        case "generateTestTimeout":
+          var timeout = 0;
+          if (ps.GetIntArgument(ref timeout)) {
+            Timeout = (uint)timeout;
+          }
+          return true;
+
         case "generateTestPruneFailed":
           PruneFailedTests = true;
           return true;
@@ -82,7 +90,9 @@ namespace Microsoft.Dafny {
     0 is the default. When used in conjunction with /testTargetMethod, this
     argument specifies the depth up to which all non-tested methods should be
     inlined.
-/pruneFailed
+/generateTestTimeout:<n>
+    Timeout generation of a test for a particular block/path after n seconds
+/generateTestPruneFailed
     verify generated tests and remove any that flag a verification error";
 
   }

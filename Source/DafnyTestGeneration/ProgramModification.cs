@@ -87,9 +87,10 @@ namespace DafnyTestGeneration {
       engine.CoalesceBlocks(program);
       engine.Inline(program);
       var writer = new StringWriter();
-      await engine.InferAndVerify(writer, program,
+      await Task.WhenAny(engine.InferAndVerify(writer, program,
         new PipelineStatistics(), null,
-        _ => { }, uniqueId);
+        _ => { }, uniqueId),
+        Task.Delay(TimeSpan.FromSeconds(oldOptions.TestGenOptions.Timeout)));
       var log = writer.ToString();
       DafnyOptions.Install(oldOptions);
       // make sure that there is a counterexample (i.e. no parse errors, etc):
