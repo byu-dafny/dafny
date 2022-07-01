@@ -121,6 +121,7 @@ namespace DafnyTestGeneration {
     /// </summary>
     public static async IAsyncEnumerable<string> GetTestClassForProgram(string sourceFile) {
 
+      TestMethod.ClearTypesToSynthesize();
       var source = new StreamReader(sourceFile).ReadToEnd();
       var program = Utils.Parse(source, sourceFile);
       if (program == null) {
@@ -135,7 +136,8 @@ namespace DafnyTestGeneration {
         string methodStr = method.ToString();
         if (DafnyOptions.O.TestGenOptions.PruneFailedTests) {
           string testClassPrelude = GetTestClassPrelude(sourceFile, dafnyInfo).Aggregate("", (x, y) => x = x + y + '\n');
-          string testClassWithSingleMethod = testClassPrelude + methodStr + "\n}";
+          string testClassWithSingleMethod = testClassPrelude + methodStr 
+            + TestMethod.EmitSynthesizeMethods() + "\n}";
           Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod, Path.GetFileName(sourceFile));
 
           if (dafnyProgram != null) {
@@ -154,6 +156,8 @@ namespace DafnyTestGeneration {
           yield return methodStr;
         }
       }
+
+      yield return TestMethod.EmitSynthesizeMethods();
 
       yield return "}";
     }
