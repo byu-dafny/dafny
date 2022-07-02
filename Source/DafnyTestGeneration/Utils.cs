@@ -13,10 +13,11 @@ namespace DafnyTestGeneration {
     /// <summary>
     /// Parse a string read (from a certain file) to a Dafny Program
     /// </summary>
-    public static Program? Parse(string source, string fileName = "") {
+    public static Program? Parse(string source, string fileName = "", 
+      ErrorReporter? customReporter = null) {
       ModuleDecl module = new LiteralModuleDecl(new DefaultModuleDecl(), null);
       var builtIns = new BuiltIns();
-      var reporter = new ConsoleErrorReporter();
+      var reporter = customReporter ?? new ConsoleErrorReporter();
       var success = Parser.Parse(source, fileName, fileName, null, module, builtIns,
         new Errors(reporter)) == 0 && Microsoft.Dafny.Main.ParseIncludesDepthFirstNotCompiledFirst(module, builtIns,
         new HashSet<string>(), new Errors(reporter)) == null;

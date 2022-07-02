@@ -118,33 +118,38 @@ namespace DafnyTestGeneration {
     }
 
     private static async Task<string> RetMethodIfVerified(string sourceFile, DafnyInfo dafnyInfo, string methodStr) {
-      string testClassPrelude = GetTestClassPrelude(sourceFile, dafnyInfo).Aggregate("", (x, y) => x = x + y + '\n');
-      string testClassWithSingleMethod = testClassPrelude + methodStr 
-        + TestMethod.EmitSynthesizeMethods() + "\n}";
-      Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod, Path.GetFileName(sourceFile));
+      try {
+        string testClassPrelude = GetTestClassPrelude(sourceFile, dafnyInfo).Aggregate("", (x, y) => x = x + y + '\n');
+        string testClassWithSingleMethod = testClassPrelude + methodStr 
+          + TestMethod.EmitSynthesizeMethods() + "\n}";
+        Program? dafnyProgram = Utils.Parse(testClassWithSingleMethod, 
+          Path.GetFileName(sourceFile), new ErrorReporterSink());
 
-      if (dafnyProgram != null) {
-        var engine = Microsoft.Boogie.ExecutionEngine.CreateWithoutSharedCache(DafnyOptions.O);
-        var boogiePrograms = Translator.Translate(dafnyProgram, dafnyProgram.Reporter).ToList().ConvertAll(tuple => tuple.Item2);
-        var boogieProgram = ProgramModifier.MergeBoogiePrograms(boogiePrograms);
-        var writer = new StringWriter();
-        var uniqueId = System.Guid.NewGuid().ToString();
+        if (dafnyProgram != null) {
+          var engine = Microsoft.Boogie.ExecutionEngine.CreateWithoutSharedCache(DafnyOptions.O);
+          var boogiePrograms = Translator.Translate(dafnyProgram, dafnyProgram.Reporter).ToList().ConvertAll(tuple => tuple.Item2);
+          var boogieProgram = ProgramModifier.MergeBoogiePrograms(boogiePrograms);
+          var writer = new StringWriter();
+          var uniqueId = System.Guid.NewGuid().ToString();
 
-        Task<(Microsoft.Boogie.PipelineOutcome, Microsoft.Boogie.PipelineStatistics)> 
-          boogieTask = Microsoft.Dafny.Main.BoogieOnce(writer, engine, "", "", boogieProgram, uniqueId);
+          Task<(Microsoft.Boogie.PipelineOutcome, Microsoft.Boogie.PipelineStatistics)> 
+            boogieTask = Microsoft.Dafny.Main.BoogieOnce(writer, engine, "", "", boogieProgram, uniqueId);
 
-        var task = await Task.WhenAny(
-          boogieTask,
-          Task.Delay(System.TimeSpan.FromSeconds(DafnyOptions.O.TestGenOptions.Timeout)));
+          var task = await Task.WhenAny(
+            boogieTask,
+            Task.Delay(System.TimeSpan.FromSeconds(DafnyOptions.O.TestGenOptions.Timeout)));
 
-        if (task == boogieTask) {
-          var (outcome, stats) = await boogieTask;
+          if (task == boogieTask) {
+            var (outcome, stats) = await boogieTask;
 
-          if (Microsoft.Dafny.Main.IsBoogieVerified(outcome, stats)) 
-            return methodStr;
+            if (Microsoft.Dafny.Main.IsBoogieVerified(outcome, stats)) 
+              return methodStr;
+          }
         }
+        return "";
+      } catch (System.Exception) {
+        return "";
       }
-      return "";
     }
 
     /// <summary>
