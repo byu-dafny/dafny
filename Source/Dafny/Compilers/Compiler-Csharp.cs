@@ -2226,7 +2226,6 @@ namespace Microsoft.Dafny.Compilers {
         case "override":
         case "params":
         case "private":
-        case "protected":
         case "public":
         case "readonly":
         case "ref":
