@@ -1926,28 +1926,12 @@ namespace Microsoft.Dafny.Compilers {
           v.Visit(f);
         } else if (member is Method m) {
           if (Attributes.Contains(m.Attributes, "synthesize")) {
-            var args = Attributes.FindExpressions(m.Attributes, "synthesize");
-            if (args != null && (string)(args[0] as StringLiteralExpr)?.Value == "mock") {
-              if (m.IsStatic && m.Outs.Count > 0 && m.Body == null) {
-                classWriter.SynthesizeMethod(m, CombineAllTypeArguments(m), true, true, false);
-              } else {
-                Error(m.tok, "Method {0} is annotated with :synthesize but " +
-                           "is not static, has a body, or does not return " +
-                           "anything",
-                errorWr, m.FullName);
-              }
-            } else if (args != null && (string)(args[0] as StringLiteralExpr)?.Value == "fresh") {
-              if (m.IsStatic && m.Outs.Count > 0 && m.Body == null) {
-                classWriter.SynthesizeMethod(m, CombineAllTypeArguments(m), true, true, false);
-              } else {
-                Error(m.tok, "Method {0} is annotated with :synthesize but " +
-                           "is not static, has a body, or does not return " +
-                           "anything",
-                errorWr, m.FullName);
-              }
+            if (m.IsStatic && m.Outs.Count > 0 && m.Body == null) {
+              classWriter.SynthesizeMethod(m, CombineAllTypeArguments(m), true, true, false);
             } else {
               Error(m.tok, "Method {0} is annotated with :synthesize but " +
-                          "does not have the required parameters",
+                           "is not static, has a body, or does not return " +
+                           "anything",
                 errorWr, m.FullName);
             }
           } else if (m.Body == null && !(c is TraitDecl && !m.IsStatic) &&
