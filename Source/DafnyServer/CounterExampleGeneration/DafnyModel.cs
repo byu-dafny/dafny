@@ -20,10 +20,10 @@ namespace DafnyServer.CounterexampleGeneration {
   /// methods are: GetDafnyType, CanonicalName, and GetExpansion
   /// </summary>
   public class DafnyModel {
-
+    
     public readonly Model Model;
     public readonly List<DafnyModelState> States = new();
-    public static readonly UserDefinedType UnknownType =
+    public static readonly UserDefinedType UnknownType = 
       new(new Token(), "?", null);
     private readonly Model.Func fSetSelect, fSeqLength, fSeqIndex, fBox,
       fDim, fIndexField, fMultiIndexField, fDtype, fCharToInt, fTag, fBv, fType,
@@ -42,7 +42,7 @@ namespace DafnyServer.CounterexampleGeneration {
     private bool isTrueReserved; // True if "true" appears anywhere in the model
     // maps an element representing a primitive to its string representation
     private readonly Dictionary<Model.Element, string> reservedValuesMap = new();
-    // maps width to a unique object representing bitvector type of such width 
+    // maps width to a unique type object representing bitvector of such width 
     private readonly Dictionary<int, BitvectorType> bitvectorTypes = new();
 
     // the model will begin assigning characters starting from this utf value
@@ -209,11 +209,11 @@ namespace DafnyServer.CounterexampleGeneration {
           return "'\\\''";
         case 92:
           return "'\\\\'";
-        default:
-          if ((UTFCode >= 32) && (UTFCode <= 126)) {
-            return $"'{Convert.ToChar(UTFCode)}'";
-          }
-          return $"'\\u{UTFCode:X4}'";
+       default:
+         if ((UTFCode >= 32) && (UTFCode <= 126)) {
+           return $"'{Convert.ToChar(UTFCode)}'";
+         }
+         return $"'\\u{UTFCode:X4}'";
       }
     }
 
@@ -316,8 +316,8 @@ namespace DafnyServer.CounterexampleGeneration {
         if (funcTuple.Func.Arity != 0) {
           continue;
         }
-        if ((name == null) || name.Contains("$")) { // 2nd case is type param
-          name = funcTuple.Func.Name;
+        if ((name == null) || (name.Contains("$"))) { // 2nd case is type param
+          name = funcTuple.Func.Name; 
         } else if (!funcTuple.Func.Name.Contains("$")) {
           return null;
         }
@@ -549,9 +549,9 @@ namespace DafnyServer.CounterexampleGeneration {
       }
       var typeArgs = Model.GetFunc("T" + tagName.Substring(3))?.
         AppWithResult(typeElement)?.
-        Args.Select(e =>
-          GetBoogieType(e) == "DatatypeTypeType" ?
-          new DafnyModelTypeUtils.DatatypeType((ReconstructType(e) as UserDefinedType) ?? UnknownType) :
+        Args.Select(e => 
+          GetBoogieType(e) == "DatatypeTypeType" ? 
+          new DafnyModelTypeUtils.DatatypeType((ReconstructType(e) as UserDefinedType) ?? UnknownType) : 
           ReconstructType(e)).ToList();
       if (typeArgs == null) {
         return new UserDefinedType(new Token(), tagName.Substring(9), null);
@@ -564,12 +564,12 @@ namespace DafnyServer.CounterexampleGeneration {
           return new Microsoft.Dafny.MapType(true, typeArgs[0], typeArgs[1]);
         case "TagSet":
           return new SetType(true, typeArgs.First());
-        default:
+        default: 
           tagName = tagName.Substring(9);
-          if (tagName.StartsWith("_System.___hFunc") ||
+          if (tagName.StartsWith("_System.___hFunc") || 
               tagName.StartsWith("_System.___hTotalFunc") ||
               tagName.StartsWith("_System.___hPartialFunc")) {
-            return new ArrowType(new Token(), typeArgs.SkipLast(1).ToList(),
+            return new ArrowType(new Token(), typeArgs.SkipLast(1).ToList(), 
               typeArgs.Last());
           }
           return new UserDefinedType(new Token(), tagName, typeArgs);
@@ -624,7 +624,7 @@ namespace DafnyServer.CounterexampleGeneration {
       }
       if (fType.OptEval(elt) == fChar.GetConstant()) {
         if (fCharToInt.OptEval(elt) != null) {
-          if (int.TryParse(((Model.Integer)fCharToInt.OptEval(elt)).Numeral,
+          if (int.TryParse(((Model.Integer) fCharToInt.OptEval(elt)).Numeral,
                 out var UTFCode) && UTFCode is <= char.MaxValue and >= 0) {
             return PrettyPrintChar(UTFCode);
           }
@@ -789,6 +789,7 @@ namespace DafnyServer.CounterexampleGeneration {
 
       var mapDomain = fMapDomain.OptEval(var.Element);
       var mapElements = fMapElements.OptEval(var.Element);
+      var mapBuildStartPoint = var.Element;
       var mapBuild = fMapBuild.AppWithResult(var.Element);
       while (mapBuild != null) {
         var pairId = var.Children.Count.ToString();
@@ -799,7 +800,7 @@ namespace DafnyServer.CounterexampleGeneration {
         ((MapVariable)var).AddMapping(key, value);
         mapDomain = fMapDomain.OptEval(mapBuild.Args[0]);
         mapElements = fMapElements.OptEval(mapBuild.Args[0]);
-        if (fMapBuild.AppWithResult(mapBuild.Args[0]) == mapBuild) {
+        if (mapBuild.Args[0] == mapBuildStartPoint) {
           break; // can happen when constructing maps with single application
         }
         mapBuild = fMapBuild.AppWithResult(mapBuild.Args[0]);
@@ -879,7 +880,7 @@ namespace DafnyServer.CounterexampleGeneration {
       if (elt == null) {
         return new List<string>();
       }
-      var dims = fDim.OptEval(elt)?.AsInt();
+      int? dims = fDim.OptEval(elt)?.AsInt();
       if (dims is null or 0) { // meaning elt is not an array index
         return elt.Names.Where(tuple =>
           tuple.Func.Arity == 0 && !tuple.Func.Name.Contains("$"))

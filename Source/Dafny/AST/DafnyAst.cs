@@ -214,7 +214,7 @@ namespace Microsoft.Dafny {
     public string Name;
     /*Frozen*/
     public readonly List<Expression> Args;
-    public readonly Attributes Prev;
+    public Attributes Prev;
 
     public Attributes(string name, [Captured] List<Expression> args, Attributes prev) {
       Contract.Requires(name != null);
@@ -5939,7 +5939,7 @@ namespace Microsoft.Dafny {
       ArgumentBindings = actuals.ConvertAll(actual => new ActualBinding(null, actual));
     }
 
-    private List<Expression> arguments; // set by ResolveActualParameters during resolution
+    public List<Expression> arguments; // set by ResolveActualParameters during resolution
 
     public bool WasResolved => arguments != null;
 

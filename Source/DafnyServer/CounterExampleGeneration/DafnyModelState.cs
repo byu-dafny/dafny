@@ -36,7 +36,6 @@ namespace DafnyServer.CounterexampleGeneration {
     internal DafnyModelState(DafnyModel model, Model.CapturedState state) {
       Model = model;
       State = state;
-      VarIndex = 0;
       vars = new();
       varMap = new();
       varNameCount = new();
@@ -54,7 +53,7 @@ namespace DafnyServer.CounterexampleGeneration {
     /// <param name="maxDepth">The maximum depth up to which to expand the
     /// variable set. Can be null to indicate that there is no limit</param>
     /// <returns>List of variables</returns>
-    public HashSet<DafnyModelVariable> ExpandedVariableSet(int maxDepth) {
+    public HashSet<DafnyModelVariable> ExpandedVariableSet(int? maxDepth) {
       HashSet<DafnyModelVariable> expandedSet = new();
       // The following is the queue for elements to be added to the set. The 2nd
       // element of a tuple is the depth of the variable w.r.t. the original set
@@ -163,7 +162,7 @@ namespace DafnyServer.CounterexampleGeneration {
         if (n == -1) {
           continue;
         }
-        var name = f.Name.Substring(0, n);
+        var name = f.Name[..n];
         if (!name.Contains('#')) {
           continue;
         }
@@ -175,22 +174,22 @@ namespace DafnyServer.CounterexampleGeneration {
 
     private static string ShortenName(string name, int fnLimit) {
       var loc = TryParseSourceLocation(name);
-      if (loc != null) {
-        var fn = loc.Filename;
-        int idx = fn.LastIndexOfAny(new[] { '\\', '/' });
-        if (idx > 0) {
-          fn = fn.Substring(idx + 1);
-        }
-        if (fn.Length > fnLimit) {
-          fn = fn.Substring(0, fnLimit) + "..";
-        }
-        var addInfo = loc.AddInfo;
-        if (addInfo != "") {
-          addInfo = ":" + addInfo;
-        }
-        return $"{fn}({loc.Line},{loc.Column}){addInfo}";
+      if (loc == null) {
+        return name;
       }
-      return name;
+      var fn = loc.Filename;
+      int idx = fn.LastIndexOfAny(new[] { '\\', '/' });
+      if (idx > 0) {
+        fn = fn[(idx + 1)..];
+      }
+      if (fn.Length > fnLimit) {
+        fn = fn[..fnLimit] + "..";
+      }
+      var addInfo = loc.AddInfo;
+      if (addInfo != "") {
+        addInfo = ":" + addInfo;
+      }
+      return $"{fn}({loc.Line},{loc.Column}){addInfo}";
     }
 
     /// <summary>
@@ -204,8 +203,8 @@ namespace DafnyServer.CounterexampleGeneration {
       if (par <= 0) {
         return null;
       }
-      var res = new SourceLocation() { Filename = name.Substring(0, par) };
-      var words = name.Substring(par + 1)
+      var res = new SourceLocation { Filename = name[..par] };
+      var words = name[(par + 1)..]
         .Split(',', ')', ':')
         .Where(x => x != "")
         .ToArray();
@@ -217,7 +216,7 @@ namespace DafnyServer.CounterexampleGeneration {
         return null;
       }
       int colon = name.IndexOf(':', par);
-      res.AddInfo = colon > 0 ? name.Substring(colon + 1).Trim() : "";
+      res.AddInfo = colon > 0 ? name[(colon + 1)..].Trim() : "";
       return res;
     }
 
