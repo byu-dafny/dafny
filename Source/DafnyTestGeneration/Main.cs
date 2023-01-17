@@ -83,6 +83,35 @@ namespace DafnyTestGeneration {
       Program program, DafnyInfo? dafnyInfo = null) {
 
       dafnyInfo ??= new DafnyInfo(program);
+
+      var modifications = GetModifications(program).ToList();
+
+      // Generate tests based on counterexamples produced from modifications
+      var testMethods = new ConcurrentBag<TestMethod>();
+      for (var i = modifications.Count - 1; i >= 0; i--) {
+        var log = await modifications[i].GetCounterExampleLog();
+        if (log == null) {
+          continue;
+        }
+        var testMethod = new TestMethod(dafnyInfo, log);
+        if (testMethods.Contains(testMethod)) {
+          continue;
+        }
+        testMethods.Add(testMethod);
+        yield return testMethod;
+      }
+    }
+
+    /// <summary>
+    /// Generate test methods for a certain Dafny program.
+    /// </summary>
+    /// <returns></returns>
+    public static async IAsyncEnumerable<TestMethod> GetInputPartitionTestMethodsForProgram(
+      Program program, DafnyInfo? dafnyInfo = null) {
+      dafnyInfo ??= new DafnyInfo(program);
+      
+      
+      
       var modifications = GetModifications(program).ToList();
 
       // Generate tests based on counterexamples produced from modifications
@@ -125,12 +154,17 @@ namespace DafnyTestGeneration {
         yield return $"import {module}";
       }
 
-      await foreach (var method in GetTestMethodsForProgram(program, dafnyInfo)) {
-        yield return method.ToString();
+      if (DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Input) {
+        await foreach (var method in GetInputPartitionTestMethodsForProgram(program, dafnyInfo)) {
+          yield return method.ToString();
+        }
+      } else {
+        await foreach (var method in GetTestMethodsForProgram(program, dafnyInfo)) {
+          yield return method.ToString();
+        }
+
+        yield return TestMethod.EmitSynthesizeMethods();
       }
-
-      yield return TestMethod.EmitSynthesizeMethods();
-
       yield return "}";
     }
   }

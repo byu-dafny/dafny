@@ -7,7 +7,7 @@ namespace Microsoft.Dafny {
   public class TestGenerationOptions {
 
     public bool WarnDeadCode = false;
-    public enum Modes { None, Block, Path };
+    public enum Modes { None, Block, Path, Input };
     public Modes Mode = Modes.None;
     [CanBeNull] public string TargetMethod = null;
     public uint? SeqLengthLimit = null;
@@ -29,6 +29,7 @@ namespace Microsoft.Dafny {
               "None" => Modes.None,
               "Block" => Modes.Block,
               "Path" => Modes.Path,
+              "Input" => Modes.Input,
               _ => throw new Exception("Invalid value for testMode")
             };
           }
