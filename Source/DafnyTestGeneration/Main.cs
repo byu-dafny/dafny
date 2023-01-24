@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Boogie;
 using Microsoft.Dafny;
 using Program = Microsoft.Dafny.Program;
 
@@ -106,28 +107,27 @@ namespace DafnyTestGeneration {
     /// Generate test methods for a certain Dafny program.
     /// </summary>
     /// <returns></returns>
-    public static async IAsyncEnumerable<TestMethod> GetInputPartitionTestMethodsForProgram(
+    public static IAsyncEnumerable<TestMethod> GetInputPartitionTestMethodsForProgram(
       Program program, DafnyInfo? dafnyInfo = null) {
       dafnyInfo ??= new DafnyInfo(program);
       
-      
-      
-      var modifications = GetModifications(program).ToList();
+      // Translate the Program to Boogie:
+      var oldPrintInstrumented = DafnyOptions.O.PrintInstrumented;
+      DafnyOptions.O.PrintInstrumented = true;
+      var boogiePrograms = Translator
+        .Translate(program, program.Reporter)
+        .ToList().ConvertAll(tuple => tuple.Item2);
+      DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
 
-      // Generate tests based on counterexamples produced from modifications
-      var testMethods = new ConcurrentBag<TestMethod>();
-      for (var i = modifications.Count - 1; i >= 0; i--) {
-        var log = await modifications[i].GetCounterExampleLog();
-        if (log == null) {
-          continue;
-        }
-        var testMethod = new TestMethod(dafnyInfo, log);
-        if (testMethods.Contains(testMethod)) {
-          continue;
-        }
-        testMethods.Add(testMethod);
-        yield return testMethod;
+      InputMapper inputMapper = new InputMapper(boogiePrograms);
+      Dictionary<Procedure, List<Requires>> implementations = inputMapper.GetImplementationsAndRequires();
+
+      // Generate tests for each implementation
+      for (var i = 0; i < implementations.Count; i++) {
+        // create the map for the given implementation
       }
+
+      return null;
     }
 
     /// <summary>
