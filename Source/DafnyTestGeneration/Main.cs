@@ -120,11 +120,13 @@ namespace DafnyTestGeneration {
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
 
       InputMapper inputMapper = new InputMapper(boogiePrograms);
-      Dictionary<Procedure, List<Requires>> implementations = inputMapper.GetImplementationsAndRequires();
+      IDictionary<Procedure, List<Requires>> implementations = inputMapper.GetImplementationsAndRequires();
 
+      List<BlackBoxMethod> methodsUnderTest = new List<BlackBoxMethod>();
       // Generate tests for each implementation
-      for (var i = 0; i < implementations.Count; i++) {
+      foreach (KeyValuePair<Procedure, List<Requires>> entry in implementations) {
         // create the map for the given implementation
+        BlackBoxMethod m = new BlackBoxMethod(entry.Key, entry.Value);
       }
 
       return null;

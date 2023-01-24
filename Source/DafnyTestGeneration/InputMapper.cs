@@ -10,7 +10,7 @@ namespace DafnyTestGeneration {
   /// </summary>
   public class InputMapper : ReadOnlyVisitor {
     
-    private Dictionary<Procedure, List<Requires>> requires;
+    private IDictionary<Procedure, List<Requires>> requires;
     private Program? program; // the original program
 
     public InputMapper(IEnumerable<Program> programs) {
@@ -18,7 +18,7 @@ namespace DafnyTestGeneration {
       requires = new Dictionary<Procedure, List<Requires>>();
     }
 
-    public Dictionary<Procedure, List<Requires>> GetImplementationsAndRequires() {
+    public IDictionary<Procedure, List<Requires>> GetImplementationsAndRequires() {
       VisitProgram(program);
       return requires;
     }
@@ -56,7 +56,7 @@ namespace DafnyTestGeneration {
 
     public override Procedure VisitProcedure(Procedure node) {
       if (node != null && node.Name.Contains("Call$$M.")) {
-        requires.Add(node, node.Requires);
+        requires.Add(new KeyValuePair<Procedure,List<Requires>>(node, node.Requires));
       }
       return node;
     }
