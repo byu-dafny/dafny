@@ -1,8 +1,8 @@
 namespace DafnyTestGeneration; 
 
 public class Input {
-  private string name;
-  private string type;
+  public string name { get; }
+  public string type { get; }
 
   public Input(string name, string type) {
     this.name = name;

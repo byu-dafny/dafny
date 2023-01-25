@@ -127,6 +127,7 @@ namespace DafnyTestGeneration {
       foreach (KeyValuePair<Procedure, List<Requires>> entry in implementations) {
         // create the map for the given implementation
         BlackBoxMethod m = new BlackBoxMethod(entry.Key, entry.Value);
+        methodsUnderTest.Add(m);
       }
 
       return null;
