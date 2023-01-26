@@ -110,7 +110,6 @@ namespace DafnyTestGeneration {
     public static IAsyncEnumerable<TestMethod> GetInputPartitionTestMethodsForProgram(
       Program program, DafnyInfo? dafnyInfo = null) {
       dafnyInfo ??= new DafnyInfo(program);
-      
       // Translate the Program to Boogie:
       var oldPrintInstrumented = DafnyOptions.O.PrintInstrumented;
       DafnyOptions.O.PrintInstrumented = true;
