@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Dafny;
 using Type = System.Type;
@@ -63,35 +64,51 @@ public class BlackBoxMethod {
     return input.name == expr.Input.name;
   }
   
-  private Tuple<int, int> SelectTuple(List<Tuple<int, int>> domain) {
-    return null;
+  // return the tuple containing the value to compare against
+  private Tuple<int, int> SelectTuple(List<Tuple<int, int>> domain, int val) {
+    return domain.FirstOrDefault(t => val >= t.Item1 && val <= t.Item2);
+  }
+  
+  // remove tuples above a given tuple
+  private List<Tuple<int, int>> removeTuples(List<Tuple<int, int>> domain, Tuple<int, int> t) {
+    domain.RemoveRange(domain.IndexOf(t), domain.Count - 1);
+    return domain;
   }
   
   // Find domain of each input
-  // private void FindDomains() {
-  //   foreach (var i in InputDict) {
-  //     List<Tuple<int, int>> domain = new List<Tuple<int, int>>();
-  //     domain.Add(new Tuple<int, int>(int.MinValue, int.MaxValue));
-  //     foreach (var r in i.Value) {
-  //       if (r.compValue > domain. || r.compValue < domain.Item1) {
-  //         continue;
-  //       }
-  //       if (r.binOp == "<") {
-  //         domain = new Tuple<int, int>(domain.Item1, r.compValue - 1);
-  //       } else if (r.binOp == "<=") {
-  //         domain = new Tuple<int, int>(domain.Item1, r.compValue);
-  //       } else if (r.binOp == ">") {
-  //         domain = new Tuple<int, int>(r.compValue + 1, domain.Item2);
-  //       } else if (r.binOp == ">=") {
-  //         domain = new Tuple<int, int>(r.compValue, domain.Item2);
-  //       } else if (r.binOp == "==") {
-  //         domain = new Tuple<int, int>(r.compValue, r.compValue);
-  //       } else if (r.binOp == "!=") {
-  //         Tuple<int, int> domain2 = new Tuple<int, int>(domain.Item1, r.compValue - 1);
-  //         domain = new Tuple<int, int>(r.compValue + 1, domain.Item2);
-  //       }
-  //     }
-  //   }
-  // }
-
+  private void FindDomains() {
+    // for each input to the method
+    foreach (var i in InputDict) {
+      List<Tuple<int, int>> domain = new List<Tuple<int, int>>();
+      domain.Add(new Tuple<int, int>(int.MinValue, int.MaxValue)); // the domain is initially all integers
+      // for each requires clause that mentions that input
+      foreach (var r in i.Value) {
+        Tuple<int, int> t = SelectTuple(domain, r.compValue);
+        if (t == null) {
+          continue;
+        }
+        if (r.binOp == "<") {
+          Tuple<int, int> newT = new Tuple<int, int>(t.Item1, r.compValue - 1);
+          domain = removeTuples(domain, t);
+          domain.Add(newT);
+        } else if (r.binOp == "<=") {
+          Tuple<int, int> newT = new Tuple<int, int>(t.Item1, r.compValue);
+          // remove all tuples above old t, old t = t
+        } else if (r.binOp == ">") {
+          Tuple<int, int> newT = new Tuple<int, int>(r.compValue + 1, t.Item2);
+          // remove all tuples below old t, old t = t
+        } else if (r.binOp == ">=") {
+          Tuple<int, int> newT = new Tuple<int, int>(r.compValue, t.Item2);
+          // remove all tuples below old t, old t = t
+        } else if (r.binOp == "==") {
+          Tuple<int, int> newT = new Tuple<int, int>(r.compValue, r.compValue);
+          // remove all tuples and add t
+        } else if (r.binOp == "!=") {
+          Tuple<int, int> domain2 = new Tuple<int, int>(t.Item1, r.compValue - 1);
+          Tuple<int, int> newT = new Tuple<int, int>(r.compValue + 1, t.Item2);
+          // remove old t, add domain2 and t
+        }
+      }
+    }
+  }
 }
