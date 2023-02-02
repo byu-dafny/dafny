@@ -70,8 +70,12 @@ public class BlackBoxMethod {
   }
   
   // remove tuples above a given tuple
-  private List<Tuple<int, int>> removeTuples(List<Tuple<int, int>> domain, Tuple<int, int> t) {
-    domain.RemoveRange(domain.IndexOf(t), domain.Count - 1);
+  private List<Tuple<int, int>> removeTuples(List<Tuple<int, int>> domain, Tuple<int, int> t, bool upper) {
+    if (upper) {
+      domain.RemoveRange(domain.IndexOf(t), domain.Count - domain.IndexOf(t));
+    } else {
+      domain.RemoveRange(0, domain.IndexOf(t) + 1);
+    }
     return domain;
   }
   
@@ -89,24 +93,33 @@ public class BlackBoxMethod {
         }
         if (r.binOp == "<") {
           Tuple<int, int> newT = new Tuple<int, int>(t.Item1, r.compValue - 1);
-          domain = removeTuples(domain, t);
+          domain = removeTuples(domain, t, true);
           domain.Add(newT);
         } else if (r.binOp == "<=") {
           Tuple<int, int> newT = new Tuple<int, int>(t.Item1, r.compValue);
           // remove all tuples above old t, old t = t
+          domain = removeTuples(domain, t, true);
+          domain.Add(newT);
         } else if (r.binOp == ">") {
           Tuple<int, int> newT = new Tuple<int, int>(r.compValue + 1, t.Item2);
           // remove all tuples below old t, old t = t
+          domain = removeTuples(domain, t, false);
+          domain.Add(newT);
         } else if (r.binOp == ">=") {
           Tuple<int, int> newT = new Tuple<int, int>(r.compValue, t.Item2);
           // remove all tuples below old t, old t = t
+          domain = removeTuples(domain, t, false);
+          domain.Add(newT);
         } else if (r.binOp == "==") {
           Tuple<int, int> newT = new Tuple<int, int>(r.compValue, r.compValue);
           // remove all tuples and add t
+          domain = new List<Tuple<int, int>> { newT };
         } else if (r.binOp == "!=") {
           Tuple<int, int> domain2 = new Tuple<int, int>(t.Item1, r.compValue - 1);
           Tuple<int, int> newT = new Tuple<int, int>(r.compValue + 1, t.Item2);
-          // remove old t, add domain2 and t
+          // remove old t, add domain2 and newt
+          domain.Remove(t);
+          //domain.Add(); need to add in the right spot
         }
       }
     }
