@@ -15,5 +15,9 @@
     <ProjectReference Include="..\DafnyServer\DafnyServer.csproj" />
     <ProjectReference Include="..\DafnyPipeline\DafnyPipeline.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Z3" Version="4.12.0" />
+  </ItemGroup>
 
 </Project>

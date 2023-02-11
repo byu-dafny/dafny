@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Boogie;
+using Microsoft.Z3;
 using Microsoft.Dafny;
 using Type = System.Type;
 
@@ -19,6 +21,7 @@ public class BlackBoxMethod {
     this.InputDict = new Dictionary<Input, List<RequiresExpr>>();
     this.DomainDict = new Dictionary<Input, List<Tuple<int, int>>>();
     RefineInfo();
+    FindDomains();
   }
 
   private void RefineInfo() {
@@ -29,6 +32,8 @@ public class BlackBoxMethod {
         if (ContainsInput(input.Key, exp)) {
           input.Value.Add(exp);
         }
+
+        Solver s;
       }
     }
   }
@@ -42,7 +47,8 @@ public class BlackBoxMethod {
       string type = cond.Args[0].Type.ToString();
       Input i = new Input(name, type);
       string op = cond.Fun.FunctionName;
-      int val = int.Parse(cond.Args[1].ToString());
+      string x = cond.Args[1].ToString();
+      int val = int.Parse(Regex.Match(x, @"\d+").Value);
       requiresExprs.Add(new RequiresExpr(i, op, val));
     }
 
@@ -122,6 +128,7 @@ public class BlackBoxMethod {
           //domain.Add(); need to add in the right spot
         }
       }
+      DomainDict.Add(i.Key, domain);
     }
   }
 }

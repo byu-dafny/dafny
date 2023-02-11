@@ -95,6 +95,9 @@ namespace DafnyTestGeneration {
       // make sure that there is a counterexample (i.e. no parse errors, etc):
       var stringReader = new StringReader(log);
       while (await stringReader.ReadLineAsync() is { } line) {
+        if (DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Input && line.StartsWith("Impl |")) {
+          return log;
+        }
         if (line.StartsWith("Block |")) {
           return log;
         }

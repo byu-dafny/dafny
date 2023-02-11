@@ -67,12 +67,15 @@ namespace DafnyTestGeneration {
         .Translate(program, program.Reporter)
         .ToList().ConvertAll(tuple => tuple.Item2);
       DafnyOptions.O.PrintInstrumented = oldPrintInstrumented;
-
-      // Create modifications of the program with assertions for each block\path
-      ProgramModifier programModifier =
-        DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path
-          ? new PathBasedModifier()
-          : new BlockBasedModifier();
+      
+      ProgramModifier programModifier;
+      if (DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Path) {
+        programModifier = new PathBasedModifier();
+      } else if (DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Block) {
+        programModifier = new BlockBasedModifier();
+      } else {
+        programModifier = new PartitionModifier();
+      }
       return programModifier.GetModifications(boogiePrograms);
     }
 
@@ -155,18 +158,11 @@ namespace DafnyTestGeneration {
       foreach (var module in dafnyInfo.ToImport) {
         yield return $"import {module}";
       }
-
-      if (DafnyOptions.O.TestGenOptions.Mode == TestGenerationOptions.Modes.Input) {
-        await foreach (var method in GetInputPartitionTestMethodsForProgram(program, dafnyInfo)) {
-          yield return method.ToString();
-        }
-      } else {
-        await foreach (var method in GetTestMethodsForProgram(program, dafnyInfo)) {
-          yield return method.ToString();
-        }
-
-        yield return TestMethod.EmitSynthesizeMethods();
+      
+      await foreach (var method in GetTestMethodsForProgram(program, dafnyInfo)) {
+        yield return method.ToString();
       }
+      yield return TestMethod.EmitSynthesizeMethods();
       yield return "}";
     }
   }
