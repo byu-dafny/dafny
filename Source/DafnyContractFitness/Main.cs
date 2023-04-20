@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace DafnyContractVerification;
 
@@ -17,9 +18,9 @@ public class TestClass
     checkerList.Add(vacuityChecker);
     checkerList.Add(unconstrainedChecker);
     //Standin for actual contracts
-    List<AttributedExpression> contracts = new List<AttributedExpression>();
-    foreach (ContractChecker checker in checkerList) {
-      checker.evaluate(contracts);
-    }
+    List<BinaryExpression> requires = new List<BinaryExpression>();
+    List<BinaryExpression> ensures = new List<BinaryExpression>();
+
+    contradictionChecker.evaluate(requires, ensures);
   }
 }

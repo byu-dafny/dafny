@@ -1,4 +1,6 @@
 
+using System.Linq.Expressions;
+
 namespace DafnyContractVerification;
 
 public class Redundant : ContractChecker {
@@ -6,7 +8,7 @@ public class Redundant : ContractChecker {
     //Return feedback on the redundancy of the contracts 
     //Modify or create new set and add to it individually
     public Redundant() {}
-    public override List<string> evaluate(List<AttributedExpression> contracts) {
+    public override List<string> evaluate(List<BinaryExpression> requires, List<BinaryExpression> ensures) {
       throw new NotImplementedException();
     }
   }

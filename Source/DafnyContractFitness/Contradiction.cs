@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace DafnyContractVerification; 
 
 public class Contradiction : ContractChecker {
@@ -6,7 +8,15 @@ public class Contradiction : ContractChecker {
   //Modify or create new set and add to it individually
   public Contradiction() {}
 
-  public override List<string> evaluate(List<AttributedExpression> contracts) {
+  public override List<string> evaluate(List<BinaryExpression> requires, List<BinaryExpression> ensures) {
+    //&& all requires together and all ensures together 
+    string completeReq = "";
+    foreach (BinaryExpression contract in requires) {
+      //if its a requires do something
+      completeReq += " && " + contract.ToString();
+    }
+    
+    //
     throw new NotImplementedException();
   }
 }
