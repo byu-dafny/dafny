@@ -349,6 +349,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
     public bool DisableScopes = false;
     public bool UseStdin = false;
     public bool WarningsAsErrors = false;
+    public bool ContractIntegrity = false;
     [CanBeNull] private TestGenerationOptions testGenOptions = null;
     public bool ExtractCounterexample = false;
     public List<string> VerificationLoggerConfigs = new();
@@ -782,6 +783,10 @@ NoGhost - disable printing of functions, ghost methods, and proof
               InvalidArgumentError(name, ps);
             }
           }
+          return true;
+        
+        case "contractIntegrity":
+          ContractIntegrity = true;
           return true;
       }
 
