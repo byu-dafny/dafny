@@ -37,7 +37,8 @@ public class ContractIntegrity : IRewriter {
 
     // Generate a check for each of the methods identified above.
     foreach (var (topLevelDecl, decl) in membersToCheck) {
-      GeneratePreContradictionCheck((Method) decl, topLevelDecl);
+      GenerateContradictionCheck((Method) decl, topLevelDecl, true); // precondition contradiction check
+      GenerateContradictionCheck((Method) decl, topLevelDecl, false); // postcondition contradiction check
     }
   }
   
@@ -56,14 +57,28 @@ public class ContractIntegrity : IRewriter {
   }
   
   // Checks preconditions for contradictions. TODO: Add the other checks
-  private void GeneratePreContradictionCheck(Method decl, TopLevelDeclWithMembers parent) {
-    var name = decl.Name + "_contradiction_requires";
+  private void GenerateContradictionCheck(Method decl, TopLevelDeclWithMembers parent, bool precondition) {
 
+    string nameSuffix;
+    BlockStmt body;
+    if (precondition) {
+      nameSuffix = "_contradiction_requires";
+      body = MakeContractCheckingBody(decl.Req);
+    } else {
+      nameSuffix = "_contradiction_ensures";
+      body = MakeContractCheckingBody(decl.Ens);
+    }
+    
+    GenerateMethodCheck(decl, parent, nameSuffix, body);
+  }
+
+  private void GenerateMethodCheck(Method decl, TopLevelDeclWithMembers parent, string nameSuffix, BlockStmt body) {
+    string name = decl.Name + nameSuffix;
+    
+    // inputs to each check for the given method
     var ins_from_ins = decl.Ins;
     var ins_from_outs = decl.Outs;
     var ins = ins_from_ins.Concat(ins_from_outs).ToList();
-
-    var body = MakeContractCheckingBody(decl.Req);
 
     var checkerMethod = new Method(RangeToken.NoToken, new Name(name), false, false, new List<TypeParameter>(),
       ins, new List<Formal>(), new List<AttributedExpression>(), new Specification<FrameExpression>(new List<FrameExpression>(), null), new List<AttributedExpression>(),
@@ -75,9 +90,5 @@ public class ContractIntegrity : IRewriter {
     parent.Members.Add(checkerMethod);
   }
 
-  internal override void PostResolveIntermediate(ModuleDefinition moduleDefinition) {
-
-  }
-  
 }
 
