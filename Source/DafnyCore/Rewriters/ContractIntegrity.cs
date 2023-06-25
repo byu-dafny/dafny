@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 
 namespace Microsoft.Dafny; 
 
@@ -8,6 +9,7 @@ public class ContractIntegrity : IRewriter {
   
   private readonly List<Method> checks = new();
   private ErrorReporter reporter;
+  private VacuityVisitor visitor = new VacuityVisitor();
   
   internal ContractIntegrity(ErrorReporter reporter) : base(reporter) {
     this.reporter = reporter;
@@ -39,34 +41,66 @@ public class ContractIntegrity : IRewriter {
     foreach (var (topLevelDecl, decl) in membersToCheck) {
       GenerateContradictionCheck((Method) decl, topLevelDecl, true); // precondition contradiction check
       GenerateContradictionCheck((Method) decl, topLevelDecl, false); // postcondition contradiction check
+      GenerateVacuityCheck((Method) decl, topLevelDecl, true); // precondition vacuity check
     }
   }
   
   // Creates an assert statement that checks for contradiction
-  private Statement CreateContradictionAssertStatement(AttributedExpression expr) {
-    var tok = expr.E.tok;
-    // var exprToCheck = expr.E;
-    var exprToCheck = Expression.CreateNot(tok, expr.E);
-    return new AssertStmt(expr.E.RangeToken, exprToCheck, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
+  private Statement CreateContradictionAssertStatement(Expression expr) {
+    var tok = expr.tok;
+    var exprToCheck = Expression.CreateNot(tok, expr);
+    return new AssertStmt(expr.RangeToken, exprToCheck, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
   }
   
   // Compiles all the asserts needed for a check and inserts them into the body
-  private BlockStmt MakeContractCheckingBody(IEnumerable<AttributedExpression> requires) {
-    var expectRequiresStmts = requires.Select(CreateContradictionAssertStatement);
-    return new BlockStmt(RangeToken.NoToken, expectRequiresStmts.ToList());
+  private BlockStmt MakeContradictionCheckingBody(IEnumerable<AttributedExpression> constraints) {
+    var expectStmts = new List<Statement>();
+    foreach (var constraint in constraints) {
+      expectStmts.Add(CreateContradictionAssertStatement(constraint.E));
+    }
+    return new BlockStmt(RangeToken.NoToken, expectStmts);
   }
   
   // Checks preconditions for contradictions. TODO: Add the other checks
   private void GenerateContradictionCheck(Method decl, TopLevelDeclWithMembers parent, bool precondition) {
-
     string nameSuffix;
     BlockStmt body;
     if (precondition) {
       nameSuffix = "_contradiction_requires";
-      body = MakeContractCheckingBody(decl.Req);
+      body = MakeContradictionCheckingBody(decl.Req);
     } else {
       nameSuffix = "_contradiction_ensures";
-      body = MakeContractCheckingBody(decl.Ens);
+      body = MakeContradictionCheckingBody(decl.Ens);
+    }
+    
+    GenerateMethodCheck(decl, parent, nameSuffix, body);
+  }
+
+  // Compiles all the asserts needed for a check and inserts them into the body
+  private BlockStmt MakeVacuityCheckingBody(IEnumerable<AttributedExpression> constraints) {
+
+    List<Expression> toTest = new List<Expression>();
+    foreach (var constraint in constraints)
+    {
+      visitor.Visit(constraint.E, constraint);
+    }
+    
+    toTest.AddRange(visitor.ClausesToCheck);
+    
+    var expectStmts = toTest.Select(CreateContradictionAssertStatement);
+    return new BlockStmt(RangeToken.NoToken, expectStmts.ToList());
+  }
+  
+  private void GenerateVacuityCheck(Method decl, TopLevelDeclWithMembers parent, bool precondition) {
+    string nameSuffix;
+    BlockStmt body;
+    
+    if (precondition) {
+      nameSuffix = "_vacuity_requires";
+      body = MakeVacuityCheckingBody(decl.Req);
+    } else {
+      nameSuffix = "_vacuity_ensures";
+      body = MakeVacuityCheckingBody(decl.Ens);
     }
     
     GenerateMethodCheck(decl, parent, nameSuffix, body);
@@ -90,5 +124,23 @@ public class ContractIntegrity : IRewriter {
     parent.Members.Add(checkerMethod);
   }
 
+}
+
+public class VacuityVisitor : TopDownVisitor<AttributedExpression> {
+  public List<Expression> ClausesToCheck { get; } = new List<Expression>();
+
+  protected override bool VisitOneExpr(Expression expr, ref AttributedExpression st) {
+    switch (expr)
+    {
+      case BinaryExpr binaryExpr when binaryExpr.Op == BinaryExpr.Opcode.Imp:
+        ClausesToCheck.Add(binaryExpr.E0);
+        break;
+      case ITEExpr iteExpr: // TODO: add support for else-if
+        ClausesToCheck.Add(iteExpr.Test);
+        break;
+    }
+
+    return base.VisitOneExpr(expr, ref st);
+  }
 }
 
