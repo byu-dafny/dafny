@@ -39,9 +39,10 @@ public class ContractIntegrity : IRewriter {
 
     // Generate a check for each of the methods identified above.
     foreach (var (topLevelDecl, decl) in membersToCheck) {
-      GenerateContradictionCheck((Method) decl, topLevelDecl, true); // precondition contradiction check
-      GenerateContradictionCheck((Method) decl, topLevelDecl, false); // postcondition contradiction check
-      GenerateVacuityCheck((Method) decl, topLevelDecl, true); // precondition vacuity check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_requires"); // precondition contradiction check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_ensures"); // postcondition contradiction check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
     }
   }
   
@@ -52,7 +53,7 @@ public class ContractIntegrity : IRewriter {
     return new AssertStmt(expr.RangeToken, exprToCheck, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
   }
   
-  // Compiles all the asserts needed for a check and inserts them into the body
+  // Compiles all the asserts needed for a contradiction check and inserts them into the body
   private BlockStmt MakeContradictionCheckingBody(IEnumerable<AttributedExpression> constraints) {
     var expectStmts = new List<Statement>();
     foreach (var constraint in constraints) {
@@ -60,23 +61,8 @@ public class ContractIntegrity : IRewriter {
     }
     return new BlockStmt(RangeToken.NoToken, expectStmts);
   }
-  
-  // Checks preconditions for contradictions. TODO: Add the other checks
-  private void GenerateContradictionCheck(Method decl, TopLevelDeclWithMembers parent, bool precondition) {
-    string nameSuffix;
-    BlockStmt body;
-    if (precondition) {
-      nameSuffix = "_contradiction_requires";
-      body = MakeContradictionCheckingBody(decl.Req);
-    } else {
-      nameSuffix = "_contradiction_ensures";
-      body = MakeContradictionCheckingBody(decl.Ens);
-    }
-    
-    GenerateMethodCheck(decl, parent, nameSuffix, body);
-  }
 
-  // Compiles all the asserts needed for a check and inserts them into the body
+  // Compiles all the asserts needed for a vacuity check and inserts them into the body
   private BlockStmt MakeVacuityCheckingBody(IEnumerable<AttributedExpression> constraints) {
 
     List<Expression> toTest = new List<Expression>();
@@ -86,33 +72,37 @@ public class ContractIntegrity : IRewriter {
     }
     
     toTest.AddRange(visitor.ClausesToCheck);
+    visitor.ClausesToCheck = new List<Expression>();
     
     var expectStmts = toTest.Select(CreateContradictionAssertStatement);
     return new BlockStmt(RangeToken.NoToken, expectStmts.ToList());
   }
   
-  private void GenerateVacuityCheck(Method decl, TopLevelDeclWithMembers parent, bool precondition) {
-    string nameSuffix;
-    BlockStmt body;
+  // Creates a method that checks the provided method (decl) for the specified issue (checkName)
+  private void GenerateMethodCheck(Method decl, TopLevelDeclWithMembers parent, string checkName) {
+    BlockStmt body = null;
     
-    if (precondition) {
-      nameSuffix = "_vacuity_requires";
-      body = MakeVacuityCheckingBody(decl.Req);
-    } else {
-      nameSuffix = "_vacuity_ensures";
-      body = MakeVacuityCheckingBody(decl.Ens);
+    switch (checkName) {
+      case "_contradiction_requires":
+        body = MakeContradictionCheckingBody(decl.Req);
+        break;
+      case "_contradiction_ensures":
+        body = MakeContradictionCheckingBody(decl.Ens);
+        break;
+      case "_vacuity_requires":
+        body = MakeVacuityCheckingBody(decl.Req);
+        break;
+      case "_vacuity_ensures":
+        body = MakeVacuityCheckingBody(decl.Ens);
+        break;
     }
     
-    GenerateMethodCheck(decl, parent, nameSuffix, body);
-  }
-
-  private void GenerateMethodCheck(Method decl, TopLevelDeclWithMembers parent, string nameSuffix, BlockStmt body) {
-    string name = decl.Name + nameSuffix;
+    string name = decl.Name + checkName;
     
     // inputs to each check for the given method
-    var ins_from_ins = decl.Ins;
-    var ins_from_outs = decl.Outs;
-    var ins = ins_from_ins.Concat(ins_from_outs).ToList();
+    var insFromIns = decl.Ins;
+    var insFromOuts = decl.Outs;
+    var ins = insFromIns.Concat(insFromOuts).ToList();
 
     var checkerMethod = new Method(RangeToken.NoToken, new Name(name), false, false, new List<TypeParameter>(),
       ins, new List<Formal>(), new List<AttributedExpression>(), new Specification<FrameExpression>(new List<FrameExpression>(), null), new List<AttributedExpression>(),
@@ -126,13 +116,14 @@ public class ContractIntegrity : IRewriter {
 
 }
 
+// Visitor that extracts expressions to check for vacuity
 public class VacuityVisitor : TopDownVisitor<AttributedExpression> {
-  public List<Expression> ClausesToCheck { get; } = new List<Expression>();
+  public List<Expression> ClausesToCheck { get; set; } = new();
 
   protected override bool VisitOneExpr(Expression expr, ref AttributedExpression st) {
     switch (expr)
     {
-      case BinaryExpr binaryExpr when binaryExpr.Op == BinaryExpr.Opcode.Imp:
+      case BinaryExpr { Op: BinaryExpr.Opcode.Imp } binaryExpr:
         ClausesToCheck.Add(binaryExpr.E0);
         break;
       case ITEExpr iteExpr: // TODO: add support for else-if
