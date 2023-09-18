@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Policy;
+using Microsoft.Boogie;
 
 namespace Microsoft.Dafny; 
 
@@ -9,7 +10,8 @@ public class ContractIntegrity : IRewriter {
   
   private readonly List<Method> checks = new();
   private ErrorReporter reporter;
-  private readonly VacuityVisitor visitor = new();
+  private readonly VacuityVisitor vacuityVisitor = new();
+  private readonly OutputVisitor outputVisitor = new();
   
   internal ContractIntegrity(ErrorReporter reporter) : base(reporter) {
     this.reporter = reporter;
@@ -40,10 +42,10 @@ public class ContractIntegrity : IRewriter {
     // Generate a check for each of the methods identified above.
     foreach (var (topLevelDecl, decl) in membersToCheck) {
       GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_requires"); // precondition contradiction check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_ensures"); // postcondition contradiction check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_unconstrained"); // unconstrained output check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_ensures"); // postcondition contradiction check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_unconstrained"); // unconstrained output check
     }
   }
   
@@ -54,7 +56,7 @@ public class ContractIntegrity : IRewriter {
     return new AssertStmt(expr.RangeToken, expr, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
   }
   
-  // Combines the assert statements and negates the combination
+  // Combines expressions, negates the combination, creates an assertion
   private Statement CombineAndNegate(IEnumerable<AttributedExpression> constraints) {
     Expression combined = null;
     var i = 0;
@@ -62,19 +64,48 @@ public class ContractIntegrity : IRewriter {
       combined = i == 0 ? constraint.E : Expression.CreateAnd(combined, constraint.E);
       i = 1;
     }
-    var tok = combined.tok;
-    var exprToCheck = Expression.CreateNot(tok, combined);
+
+    var exprToCheck = Expression.CreateNot(null, combined);
     return new AssertStmt(exprToCheck.RangeToken, exprToCheck, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
+  }
+  
+  // Combines expressions and creates an assertion
+  private Expression Conjunct(IEnumerable<AttributedExpression> constraints) {
+    Expression conjunction = Expression.CreateBoolLiteral(null, true);
+    var i = 0;
+    foreach (var constraint in constraints) {
+      conjunction = i == 0 ? constraint.E : Expression.CreateAnd(conjunction, constraint.E);
+      i = 1;
+    }
+    
+    return conjunction;
+  }
+  
+  // Disjuncts expressions and creates an assertion
+  private Expression Disjunct(List<Expression> constraints) {
+    Expression disjunction = null;
+    var i = 0;
+    foreach (var constraint in constraints) {
+      disjunction = i == 0 ? constraint : Expression.CreateOr(disjunction, constraint);
+      i = 1;
+    }
+    
+    return disjunction;
+  }
+  
+  // Creates an assert statement for unconstrained output
+  private Statement UnconstrainedAssertion(List<Expression> conditions, IEnumerable<AttributedExpression> requires) {
+    var requiresConjunction = Conjunct(requires);
+    var conditionsDisjunction = Disjunct(conditions);
+    var finalExpr = Expression.CreateImplies(requiresConjunction, conditionsDisjunction);
+    return new AssertStmt(finalExpr.RangeToken, finalExpr, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
   }
   
   // Compiles all the asserts needed for a contradiction check and inserts them into the body
   private BlockStmt MakeContradictionCheckingBody(IEnumerable<AttributedExpression> constraints) {
     var assertStmts = new List<Statement>();
-    // foreach (var constraint in constraints) {
-    //   assertStmts.Add(CreateContradictionAssertStatement(constraint.E));
-    // }
     var assertStmt = CombineAndNegate(constraints);
-    assertStmts.Add(assertStmt);
+    assertStmts.Add(assertStmt); // TODO: determine where the contradiction happens
     return new BlockStmt(RangeToken.NoToken, assertStmts);
   }
 
@@ -84,24 +115,54 @@ public class ContractIntegrity : IRewriter {
     List<Expression> toTest = new List<Expression>();
     foreach (var constraint in constraints)
     {
-      visitor.Visit(constraint.E, constraint);
+      vacuityVisitor.Visit(constraint.E, constraint);
     }
     
-    toTest.AddRange(visitor.ClausesToCheck);
-    visitor.ClausesToCheck = new List<Expression>();
+    toTest.AddRange(vacuityVisitor.ClausesToCheck);
+    vacuityVisitor.ClausesToCheck = new List<Expression>();
     
     var assertStmts = toTest.Select(CreateContradictionAssertStatement);
     return new BlockStmt(RangeToken.NoToken, assertStmts.ToList());
   }
+
+  private static IEnumerable<AttributedExpression> FilterEnsures(IEnumerable<AttributedExpression> ensures, string outputName) {
+    return (from expr in ensures where expr.E.ToString().Contains(outputName) select expr).ToList();
+  }
   
-  // Compiles all the asserts needed for a contradiction check and inserts them into the body
-  // private BlockStmt MakeOutputCheckingBody(IEnumerable<AttributedExpression> requires, IEnumerable<AttributedExpression> ensures) {
-  //   var assertStmts = new List<Statement>();
-  //   foreach (var constraint in constraints) {
-  //     assertStmts.Add(CreateContradictionAssertStatement(constraint.E));
-  //   }
-  //   return new BlockStmt(RangeToken.NoToken, assertStmts);
-  // }
+  // Compiles all the asserts needed for a unconstrained output check and inserts them into the body
+  private BlockStmt MakeOutputCheckingBody(IEnumerable<AttributedExpression> requires, IEnumerable<AttributedExpression> ensures, IEnumerable<Formal> outputs) {
+    var assertStmts = new List<Statement>();
+
+    // loop through outputs and generate check for each
+    foreach (var output in outputs) {
+      var outputStr = output.Name; // extract the name of the output
+      var mentioned = FilterEnsures(ensures, outputStr);
+
+      if (!mentioned.Any()) {
+        assertStmts.Add(new AssertStmt(RangeToken.NoToken, Expression.CreateBoolLiteral(null, false), null, null, new Attributes("subsumption 0", new List<Expression>(), null)));
+        continue;
+      }
+
+      foreach (var clause in mentioned) {
+        outputVisitor.Visit(clause.E, clause);  
+      }
+
+      var conditionalExpressions = outputVisitor.ClausesToCheck;
+      var nonConditionalExpressions = outputVisitor.ClausesWithNoConditionals;
+      
+      outputVisitor.ClausesToCheck = new List<Expression>();
+      outputVisitor.ClausesWithNoConditionals = new List<Expression>();
+
+      if (nonConditionalExpressions.Any()) {
+        assertStmts.Add(new AssertStmt(RangeToken.NoToken, Expression.CreateBoolLiteral(null, true), null, null, new Attributes("subsumption 0", new List<Expression>(), null)));
+        continue;
+      }
+      
+      assertStmts.Add(UnconstrainedAssertion(conditionalExpressions, requires));
+
+    }
+    return new BlockStmt(RangeToken.NoToken, assertStmts);
+  }
   
   // Creates a method that checks the provided method (decl) for the specified issue (checkName)
   private void GenerateMethodCheck(Method decl, TopLevelDeclWithMembers parent, string checkName) {
@@ -110,7 +171,7 @@ public class ContractIntegrity : IRewriter {
       "_contradiction_ensures" => MakeContradictionCheckingBody(decl.Ens),
       "_vacuity_requires" => MakeVacuityCheckingBody(decl.Req),
       "_vacuity_ensures" => MakeVacuityCheckingBody(decl.Ens),
-      // "_unconstrained" => MakeOutputCheckingBody(decl.Req, decl.Ens),
+      "_unconstrained" => MakeOutputCheckingBody(decl.Req,decl.Ens, decl.Outs),
       _ => null
     };
 
@@ -145,6 +206,29 @@ public class VacuityVisitor : TopDownVisitor<AttributedExpression> {
         break;
       case ITEExpr iteExpr: // TODO: add support for else-if
         ClausesToCheck.Add(iteExpr.Test);
+        break;
+    }
+
+    return base.VisitOneExpr(expr, ref st);
+  }
+}
+
+// Visitor that extracts expressions to check for unconstrained output
+public class OutputVisitor : TopDownVisitor<AttributedExpression> {
+  public List<Expression> ClausesToCheck { get; set; } = new();
+  public List<Expression> ClausesWithNoConditionals { get; set; } = new();
+
+  protected override bool VisitOneExpr(Expression expr, ref AttributedExpression st) {
+    switch (expr)
+    {
+      case BinaryExpr { Op: BinaryExpr.Opcode.Imp } binaryExpr:
+        ClausesToCheck.Add(binaryExpr.E0);
+        return false;
+      case ITEExpr iteExpr: // TODO: add support for else-if
+        ClausesToCheck.Add(iteExpr.Test);
+        return false;
+      case { } and not LiteralExpr and not NameSegment:
+        ClausesWithNoConditionals.Add(expr);
         break;
     }
 
