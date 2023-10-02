@@ -43,9 +43,9 @@ public class ContractIntegrity : IRewriter {
     foreach (var (topLevelDecl, decl) in membersToCheck) {
       GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_requires"); // precondition contradiction check
       GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_ensures"); // postcondition contradiction check
-      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
-      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
-      GenerateMethodCheck((Method) decl, topLevelDecl, "_unconstrained"); // unconstrained output check
+      // GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
+      // GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
+      // GenerateMethodCheck((Method) decl, topLevelDecl, "_unconstrained"); // unconstrained output check
     }
   }
   
@@ -56,21 +56,28 @@ public class ContractIntegrity : IRewriter {
     return new AssertStmt(expr.RangeToken, expr, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
   }
   
-  // Combines expressions, negates the combination, creates an assertion
-  private Statement CombineAndNegate(IEnumerable<AttributedExpression> constraints) {
-    Expression combined = null;
+  // Creates a conjunction of provided expressions, negates the conjunction, creates an assertion
+  private static Statement ConjunctAndNegate(IEnumerable<AttributedExpression> constraints) {
+
+    // no constraints - assert false
+    if (constraints == null || !constraints.Any()) {
+      return new AssertStmt(RangeToken.NoToken, Expression.CreateBoolLiteral(null, false), null, null,
+        new Attributes("subsumption 0", new List<Expression>(), null));
+    }
+    
+    var combined = Expression.CreateIntLiteral(null, 0);
     var i = 0;
     foreach (var constraint in constraints) {
       combined = i == 0 ? constraint.E : Expression.CreateAnd(combined, constraint.E);
       i = 1;
     }
 
-    var exprToCheck = Expression.CreateNot(null, combined);
+    var exprToCheck = Expression.CreateNot(combined.tok, combined);
     return new AssertStmt(exprToCheck.RangeToken, exprToCheck, null, null, new Attributes("subsumption 0", new List<Expression>(), null));
   }
   
-  // Combines expressions and creates an assertion
-  private Expression Conjunct(IEnumerable<AttributedExpression> constraints) {
+  // Creates a conjunction of provided expressions
+  private static Expression Conjunct(IEnumerable<AttributedExpression> constraints) {
     Expression conjunction = Expression.CreateBoolLiteral(null, true);
     var i = 0;
     foreach (var constraint in constraints) {
@@ -81,8 +88,8 @@ public class ContractIntegrity : IRewriter {
     return conjunction;
   }
   
-  // Disjuncts expressions and creates an assertion
-  private Expression Disjunct(List<Expression> constraints) {
+  // Creates a disjunction of provided expressions
+  private static Expression Disjunct(List<Expression> constraints) {
     Expression disjunction = null;
     var i = 0;
     foreach (var constraint in constraints) {
@@ -104,7 +111,7 @@ public class ContractIntegrity : IRewriter {
   // Compiles all the asserts needed for a contradiction check and inserts them into the body
   private BlockStmt MakeContradictionCheckingBody(IEnumerable<AttributedExpression> constraints) {
     var assertStmts = new List<Statement>();
-    var assertStmt = CombineAndNegate(constraints);
+    var assertStmt = ConjunctAndNegate(constraints);
     assertStmts.Add(assertStmt); // TODO: determine where the contradiction happens
     return new BlockStmt(RangeToken.NoToken, assertStmts);
   }
@@ -112,7 +119,7 @@ public class ContractIntegrity : IRewriter {
   // Compiles all the asserts needed for a vacuity check and inserts them into the body
   private BlockStmt MakeVacuityCheckingBody(IEnumerable<AttributedExpression> constraints) {
 
-    List<Expression> toTest = new List<Expression>();
+    var toTest = new List<Expression>();
     foreach (var constraint in constraints)
     {
       vacuityVisitor.Visit(constraint.E, constraint);
@@ -166,7 +173,7 @@ public class ContractIntegrity : IRewriter {
   
   // Creates a method that checks the provided method (decl) for the specified issue (checkName)
   private void GenerateMethodCheck(Method decl, TopLevelDeclWithMembers parent, string checkName) {
-    BlockStmt body = checkName switch {
+    var body = checkName switch {
       "_contradiction_requires" => MakeContradictionCheckingBody(decl.Req),
       "_contradiction_ensures" => MakeContradictionCheckingBody(decl.Ens),
       "_vacuity_requires" => MakeVacuityCheckingBody(decl.Req),
