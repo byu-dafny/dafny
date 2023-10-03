@@ -12,6 +12,7 @@ public class ContractIntegrity : IRewriter {
   private ErrorReporter reporter;
   private readonly VacuityVisitor vacuityVisitor = new();
   private readonly OutputVisitor outputVisitor = new();
+  private readonly RedundancyVisitor redundancyVisitor = new();
   
   internal ContractIntegrity(ErrorReporter reporter) : base(reporter) {
     this.reporter = reporter;
@@ -43,9 +44,11 @@ public class ContractIntegrity : IRewriter {
     foreach (var (topLevelDecl, decl) in membersToCheck) {
       GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_requires"); // precondition contradiction check
       GenerateMethodCheck((Method) decl, topLevelDecl, "_contradiction_ensures"); // postcondition contradiction check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
-      // GenerateMethodCheck((Method) decl, topLevelDecl, "_unconstrained"); // unconstrained output check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_requires"); // precondition vacuity check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_vacuity_ensures"); // postcondition vacuity check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_unconstrained"); // unconstrained output check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_redundancy_requires"); // precondition redundancy check
+      GenerateMethodCheck((Method) decl, topLevelDecl, "_redundancy_ensures"); // postcondition redundancy check
     }
   }
   
@@ -82,6 +85,18 @@ public class ContractIntegrity : IRewriter {
     var i = 0;
     foreach (var constraint in constraints) {
       conjunction = i == 0 ? constraint.E : Expression.CreateAnd(conjunction, constraint.E);
+      i = 1;
+    }
+    
+    return conjunction;
+  }
+  
+  // Creates a conjunction of provided expressions
+  private static Expression ConjunctE(IEnumerable<Expression> constraints) {
+    Expression conjunction = Expression.CreateBoolLiteral(null, true);
+    var i = 0;
+    foreach (var constraint in constraints) {
+      conjunction = i == 0 ? constraint : Expression.CreateAnd(conjunction, constraint);
       i = 1;
     }
     
@@ -171,6 +186,29 @@ public class ContractIntegrity : IRewriter {
     return new BlockStmt(RangeToken.NoToken, assertStmts);
   }
   
+  private BlockStmt MakeRedundancyCheckingBody(List<AttributedExpression> constraints) {
+    
+    var assertStmts = new List<Statement>();
+    
+    // split clauses by &&
+    foreach (var clause in constraints) {
+      redundancyVisitor.Visit(clause.E, clause);  
+    }
+    var clauses = redundancyVisitor.ClausesToCheck;
+    redundancyVisitor.ClausesToCheck = new List<Expression>();
+    
+    // create assertions
+    foreach (var clause in clauses) {
+      var filteredClauses = clauses.Where(c => c != clause);
+      var conjunctedClauses = ConjunctE(filteredClauses);
+      var assertionExpr = Expression.CreateImplies(conjunctedClauses, clause);
+      assertStmts.Add(new AssertStmt(assertionExpr.RangeToken, assertionExpr, null, null, new Attributes("subsumption 0", new List<Expression>(), null)));
+    }
+
+    return new BlockStmt(RangeToken.NoToken, assertStmts);
+
+  }
+  
   // Creates a method that checks the provided method (decl) for the specified issue (checkName)
   private void GenerateMethodCheck(Method decl, TopLevelDeclWithMembers parent, string checkName) {
     var body = checkName switch {
@@ -179,6 +217,8 @@ public class ContractIntegrity : IRewriter {
       "_vacuity_requires" => MakeVacuityCheckingBody(decl.Req),
       "_vacuity_ensures" => MakeVacuityCheckingBody(decl.Ens),
       "_unconstrained" => MakeOutputCheckingBody(decl.Req,decl.Ens, decl.Outs),
+      "_redundancy_requires" => MakeRedundancyCheckingBody(decl.Req),
+      "_redundancy_ensures" => MakeRedundancyCheckingBody(decl.Ens),
       _ => null
     };
 
@@ -198,7 +238,6 @@ public class ContractIntegrity : IRewriter {
     checks.Add(checkerMethod);
     parent.Members.Add(checkerMethod);
   }
-
 }
 
 // Visitor that extracts expressions to check for vacuity
@@ -236,6 +275,22 @@ public class OutputVisitor : TopDownVisitor<AttributedExpression> {
         return false;
       case { } and not LiteralExpr and not NameSegment:
         ClausesWithNoConditionals.Add(expr);
+        break;
+    }
+
+    return base.VisitOneExpr(expr, ref st);
+  }
+}
+
+// Visitor that extracts expressions to check for vacuity
+public class RedundancyVisitor : TopDownVisitor<AttributedExpression> {
+  public List<Expression> ClausesToCheck { get; set; } = new();
+
+  protected override bool VisitOneExpr(Expression expr, ref AttributedExpression st) {
+    switch (expr)
+    {
+      case { } and not BinaryExpr { Op: BinaryExpr.Opcode.And } and not LiteralExpr and not NameSegment and not NegationExpression:
+        ClausesToCheck.Add(expr);
         break;
     }
 
