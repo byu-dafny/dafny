@@ -70,14 +70,32 @@ namespace Microsoft.Dafny {
     }
 
     private void TestRunCompleteHandler(object sender, TestRunCompleteEventArgs e) {
-      writer.WriteLine("TestResult.DisplayName,TestResult.Outcome,TestResult.Duration,TestResult.ResourceCount");
-      foreach (var result in results.OrderByDescending(r => r.Duration)) {
+      writer.WriteLine("Method,Line,Contract Clause,Test,Result");
+      foreach (var result in results.OrderBy(r => Int32.Parse(r.TestCase.DisplayName.Split("delim")[1]))) {
         var resCount = result.GetPropertyValue(VerificationResultLogger.ResourceCountProperty);
-        writer.WriteLine($"{result.TestCase.DisplayName},{result.Outcome},{result.Duration},{resCount}");
+        var split = result.TestCase.DisplayName.Split("delim");
+        string method = split[3];
+        string line = split[1];
+        string cc = split[0];
+        if (cc.Contains(",")) {
+          cc = "\"" + cc + "\"";
+        }
+        string test = split[2];
+        writer.WriteLine($"{method},{line},{cc},{test},{result.Outcome}");
       }
 
       writer.Close();
       logWriter.WriteLine("Results File: " + Path.GetFullPath(writerFilename));
+      
+      // TODO: this is the og
+      // writer.WriteLine("TestResult.DisplayName,TestResult.Outcome,TestResult.Duration,TestResult.ResourceCount");
+      // foreach (var result in results.OrderByDescending(r => r.Duration)) {
+      //   var resCount = result.GetPropertyValue(VerificationResultLogger.ResourceCountProperty);
+      //   writer.WriteLine($"{result.TestCase.DisplayName},{result.Outcome},{result.Duration},{resCount}");
+      // }
+      //
+      // writer.Close();
+      // logWriter.WriteLine("Results File: " + Path.GetFullPath(writerFilename));
     }
   }
 }

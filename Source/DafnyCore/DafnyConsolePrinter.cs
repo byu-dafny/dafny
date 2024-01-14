@@ -95,6 +95,7 @@ public class DafnyConsolePrinter : ConsolePrinter {
 
     message = $"{tok.TokenToString(Options)}: {message}";
 
+    
     if (error) {
       ErrorWriteLine(tw, message);
     } else {
@@ -112,6 +113,8 @@ public class DafnyConsolePrinter : ConsolePrinter {
   }
 
   public override void ReportEndVerifyImplementation(Implementation implementation, Boogie.VerificationResult result) {
+    implementation.tok ??= new Boogie.Token(0, 0); // TODO: help. me. I'm destroying the world.
+    ((IToken)implementation.tok).Uri = new Uri("executor://dafnyverifier/v1"); // TODO: what the heck did I just do
     VerificationResults.Add((implementation, result));
   }
 }

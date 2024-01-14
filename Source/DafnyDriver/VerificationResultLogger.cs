@@ -90,7 +90,7 @@ namespace Microsoft.Dafny {
 
     private static IEnumerable<TestResult> VerificationToTestResults(List<(Implementation, VerificationResult)> verificationResults) {
       var testResults = new List<TestResult>();
-
+      
       foreach (var (implementation, result) in verificationResults) {
         var vcResults = result.VCResults.OrderBy(r => r.vcNum);
         var currentFile = ((IToken)implementation.tok).Uri;
@@ -109,13 +109,21 @@ namespace Microsoft.Dafny {
             Duration = vcResult.runTime
           };
           testResult.SetPropertyValue(ResourceCountProperty, vcResult.resourceCount);
-          if (vcResult.outcome == ProverInterface.Outcome.Valid) {
+
+          if (vcResult.outcome == ProverInterface.Outcome.Valid && (name.Contains("vacuity") || name.Contains("contradiction")  || name.Contains("redundancy"))) {
+            testResult.Outcome = TestOutcome.Failed;
+            testResults.Add(testResult);
+          } else if (vcResult.outcome == ProverInterface.Outcome.Invalid && (name.Contains("vacuity") || name.Contains("contradiction") || name.Contains("redundancy"))) {
             testResult.Outcome = TestOutcome.Passed;
-          } else {
+            testResults.Add(testResult);
+          } else if (vcResult.outcome == ProverInterface.Outcome.Valid && (name.Contains("unconstrained"))) {
+            testResult.Outcome = TestOutcome.Passed;
+            testResults.Add(testResult);
+          } else if (vcResult.outcome == ProverInterface.Outcome.Invalid && (name.Contains("unconstrained"))) {
             testResult.Outcome = TestOutcome.Failed;
             testResult.ErrorMessage = vcResult.outcome.ToString();
+            testResults.Add(testResult);
           }
-          testResults.Add(testResult);
         }
       }
 

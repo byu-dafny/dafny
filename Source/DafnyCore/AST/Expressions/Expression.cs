@@ -507,7 +507,7 @@ public abstract class Expression : TokenNode {
   /// Create a resolved ParensExpression around a given resolved expression "e".
   /// </summary>
   public static Expression CreateParensExpression(IToken tok, Expression e) {
-    return new ParensExpression(tok, e) { Type = e.Type, ResolvedExpression = e };
+    return new ParensExpression(tok, e) { Type = Type.Bool, ResolvedExpression = e }; // TODO: i changed this
   }
 
   public static Expression CreateNot(IToken tok, Expression e) {
